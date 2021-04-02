@@ -7,3 +7,10 @@
 #include<sys/wait.h>
 #include<string>
 
+void shell_init();
+std::string getCommand();
+void recover_from_errors();
+void processCommand();
+void do_it();
+void execute_it();
+void printPrompt();

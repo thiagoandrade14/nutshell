@@ -11,8 +11,22 @@
 *   any other tasks to be completed in init
 */
 void shell_init() {
+	printf("Nutshell is initializing...\n");
+	getcwd(cwd, sizeof(cwd));
 	std::string username = getenv("USER");
-	std::cout << "Username is " << username << "." << std::endl;
+	strcpy(varTable.var[varIndex], "PWD");
+	strcpy(varTable.word[varIndex], cwd);
+	varIndex++;
+	strcpy(varTable.var[varIndex], "HOME");
+	strcpy(varTable.word[varIndex], cwd);
+	varIndex++;
+	strcpy(varTable.var[varIndex], "PROMPT");
+	strcpy(varTable.word[varIndex], "nutshell");
+	varIndex++;
+	strcpy(varTable.var[varIndex], "PATH");
+	strcpy(varTable.word[varIndex], "./bin");
+	varIndex++;
+	printf("Initialization complete. Username is %s\n", username.c_str());	
 }
 
 
@@ -110,13 +124,18 @@ void execute_it()
 }
 
 
-//                                                                                         Print Prompt - Prints cwd prompt
-//prints directory and asks for command input
+//                                                                                         Print Prompt - Prints cwd
+/*
+* If the CWD is HOME, then display tilde character in the prompt instead
+*/
 void printPrompt() {
-	std::string userInput;
-	char cwd[1024];
-	getcwd(cwd, 1024);
-	std::cout << cwd << ": ";
+	if (strcmp(cwd, varTable.word[1]) == 0) {
+		printf("%s: ~$ ", varTable.word[2]); 
+	}
+	else {
+		printf("%s: %s$ ", varTable.word[2], cwd);
+	}
+	
 }
 
 

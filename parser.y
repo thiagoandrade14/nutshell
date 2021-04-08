@@ -30,8 +30,9 @@ int runCD(char* arg) {
     if (arg[0] != '/') { // arg is relative path
 		strcat(varTable.word[0], "/");
 		strcat(varTable.word[0], arg);
-
 		if(chdir(varTable.word[0]) == 0) {
+			getcwd(cwd, sizeof(cwd));
+			strcpy(varTable.word[0], cwd);
 			return 1;
 		}
 		else {

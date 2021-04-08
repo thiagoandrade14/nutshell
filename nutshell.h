@@ -3,12 +3,11 @@
 
 #include<stdio.h>
 #include<string.h>
-#include<iostream>
 #include<stdlib.h>
 #include<unistd.h>
 #include<sys/types.h>
 #include<sys/wait.h>
-#include<string>
+#include<string.h>
 
 //environment table
 //We will use it save importat values such as PWD, HOME, PATH, etc.
@@ -20,7 +19,7 @@ struct evTable {
 
 //function declarations
 void shell_init();
-std::string getCommand();
+//std::string getCommand();
 void recover_from_errors();
 void processCommand();
 void do_it();

@@ -16,10 +16,14 @@ struct evTable {
     char word[128][100];
 };
 
+struct aTable {
+    char name[128][100];
+    char word[128][100];
+};
+
 
 //function declarations
 void shell_init();
-//std::string getCommand();
 void recover_from_errors();
 void processCommand();
 void do_it();
@@ -28,8 +32,9 @@ void printPrompt();
 
 
 //globals
-struct evTable varTable; 
-int varIndex;
+struct evTable varTable;
+struct aTable aliasTable;
+int varIndex, aliasIndex;
 char cwd[1024];
 
 #endif

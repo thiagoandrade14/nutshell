@@ -14,6 +14,8 @@ int yyparse();
 */
 
 void shell_init() {
+	varIndex = 0;
+	aliasIndex = 0;
 	printf("Nutshell is initializing...\n");
 	getcwd(cwd, sizeof(cwd));
 	char* username = getenv("USER");
@@ -24,12 +26,12 @@ void shell_init() {
 	strcpy(varTable.word[varIndex], cwd);
 	varIndex++;
 	strcpy(varTable.var[varIndex], "PROMPT");
-	strcpy(varTable.word[varIndex], "nutshell");
+	strcpy(varTable.word[varIndex], "Nutshell DEV 0.13");
 	varIndex++;
 	strcpy(varTable.var[varIndex], "PATH");
 	strcpy(varTable.word[varIndex], "./bin");
 	varIndex++;
-	printf("Initialization complete. Username is %s\n", username);	
+	printf("Initialization complete. Username is %s\n", username);
 }
 
 
@@ -41,12 +43,7 @@ void shell_init() {
 *   else
 *       return (OK);
 
-std::string getCommand()
-{
-    std::string command;
-    getline(std::cin, command);
-    return command;
-}*/
+*/
 
 
 //                                                                                         Recover From Errors - Handling erroneous command line
@@ -60,7 +57,7 @@ std::string getCommand()
 */
 void recover_from_errors()
 {
-
+	printf("Trying to recover from error...\n");
 }
 
 
@@ -138,10 +135,7 @@ void printPrompt() {
 	else {
 		printf("%s:%s$ ", varTable.word[2], varTable.word[0]); //print prompt + PWD
 	}
-	
 }
-
-
 
 int main() {
 	shell_init();

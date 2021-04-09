@@ -26,7 +26,7 @@ void shell_init() {
 	strcpy(varTable.word[varIndex], cwd);
 	varIndex++;
 	strcpy(varTable.var[varIndex], "PROMPT");
-	strcpy(varTable.word[varIndex], "Nutshell DEV 0.13");
+	strcpy(varTable.word[varIndex], "Nutshell DEV 0.15");
 	varIndex++;
 	strcpy(varTable.var[varIndex], "PATH");
 	strcpy(varTable.word[varIndex], "./bin");

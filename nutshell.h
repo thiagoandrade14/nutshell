@@ -8,6 +8,7 @@
 #include<sys/types.h>
 #include<sys/wait.h>
 #include<string.h>
+#include<stdbool.h>
 
 //environment table
 //We will use it save importat values such as PWD, HOME, PATH, etc.
@@ -16,25 +17,25 @@ struct evTable {
     char word[128][100];
 };
 
+//alias table
+//implemented as a linked list
 struct aTable {
-    char name[128][100];
-    char word[128][100];
+    char name[128];
+    char word[128];
+    struct aTable* next;
 };
 
 
 //function declarations
 void shell_init();
-void recover_from_errors();
-void processCommand();
-void do_it();
-void execute_it();
 void printPrompt();
+void pushAlias(struct aTable* head, char* name, char* word);
 
 
 //globals
 struct evTable varTable;
-struct aTable aliasTable;
-int varIndex, aliasIndex;
+struct aTable* aliasHead;
+int varIndex;
 char cwd[1024];
 
 #endif

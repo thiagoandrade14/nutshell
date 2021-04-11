@@ -78,27 +78,9 @@ int runCD(char* arg) {
                 return 1;
 		}
 	}
-
 }
-int runSetAlias(char* name, char* word){
-	//checks for loop conditions. FIXME
-	struct aTable* current = aliasHead;
-	while (current != NULL) {
-		if(strcmp(name, word) == 0){
-			printf("Error, expansion of \"%s\" would create a loop.\n", name);
-			return 1;
-		}
-		else if((strcmp(current->name, name) == 0) && (strcmp(current->word, word) == 0)){
-			printf("Error, expansion of \"%s\" would create a loop.\n", name);
-			return 1;
-		}
-		else if(strcmp(current->name, name) == 0) {
-			strcpy(current->word, word);
-			return 1;
-		}
-		current = current->next;
-	}
-	pushAlias (aliasHead, name, word);
+int runSetAlias(char* name, char* word) {
+	pushAlias (name, word);
 	return 1;
 }
 void displayAlias(){
@@ -162,7 +144,7 @@ int unsetEnvVariable(char* variable){
 		strcpy(varTable.word[1], getcwd(cwd, sizeof(cwd)));//HOME. FIXME: home directory reassignment should not be to current directory.
 	}
 	else if (strcmp(variable, varTable.var[2]) == 0) {
-		strcpy(varTable.word[2], "Nutshell DEV 0.15");//PROMPT
+		strcpy(varTable.word[2], "Nutshell DEV 0.2");//PROMPT
 	}
 	else if (strcmp(variable, varTable.var[3]) == 0) {
 		strcpy(varTable.word[3], "/bin");//PATH

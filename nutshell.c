@@ -46,12 +46,39 @@ void printPrompt() {
 	}
 }
 
-void pushAlias(struct aTable* head, char* name, char* word) {
+void pushAlias(char* name, char* word) {
+	struct aTable* current = aliasHead;
+	//first check for loops and for matching alias names...
+	while (current != NULL) {
+		if(strcmp(name, word) == 0){
+			printf("Error, expansion of \"%s\" would create a loop.\n", name);
+			return;
+		}
+		else if((strcmp(current->name, name) == 0) && (strcmp(current->word, word) == 0)){
+			printf("Error, expansion of \"%s\" would create a loop.\n", name);
+			return;
+		}
+		else if(strcmp(current->name, name) == 0) {
+			strcpy(current->word, word);
+			return;
+		}
+		current = current->next;
+	}
+	//if no matching name was found, allocate and create new alias name and word
 	struct aTable* newAlias = (struct aTable*)malloc(sizeof(struct aTable));
 	strcpy(newAlias->name, name);
 	strcpy(newAlias->word, word);
-	newAlias->next = head;
-	aliasHead = newAlias;
+	newAlias->next = NULL;
+	if (aliasHead == NULL) {
+		aliasHead = newAlias;
+	}
+	else {
+		current = aliasHead;
+		while (current->next != NULL) {
+			current = current->next;
+		}
+		current->next = newAlias;
+	}	
 }
 
 int main() {

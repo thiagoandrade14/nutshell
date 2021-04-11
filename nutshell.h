@@ -29,7 +29,7 @@ struct aTable {
 //function declarations
 void shell_init();
 void printPrompt();
-void pushAlias(struct aTable* head, char* name, char* word);
+void pushAlias(char* name, char* word);
 
 
 //globals

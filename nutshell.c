@@ -35,7 +35,7 @@ void shell_init() {
     char* username = getenv("USER");
     strcpy(varTable.var[varIndex], "USER");
     strcpy(varTable.word[varIndex], username);
-    varIndex++;
+	varIndex++;
 	printf("Initialization complete. Username is %s\n", username);
 }
 //                                                                                         Print Prompt - Prints cwd
@@ -84,6 +84,26 @@ void pushAlias(char* name, char* word) {
 		}
 		current->next = newAlias;
 	}	
+}
+char* subAliases(char* name) {
+    struct aTable* current = aliasHead;
+    while (current != NULL) {
+        if (strcmp(current->name, name) == 0) {
+            return current->word;
+        }
+        current = current->next;
+    }
+    return name;
+}
+bool ifAlias(char* name){
+    struct aTable* current = aliasHead;
+    while (current != NULL) {
+        if(strcmp(current->name, name) == 0) {
+            return true;
+        }
+        current = current->next;
+    }
+    return false;
 }
 
 int main() {

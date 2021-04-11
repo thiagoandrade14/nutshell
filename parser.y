@@ -139,25 +139,6 @@ int setEnvVariable(char* variable, char* word)
     }
 }
 //unset will restore to the default value of the variable.
-<<<<<<< HEAD
-int unsetEnvVariable(char* variable){
-	if (strcmp(variable, varTable.var[0]) == 0) {
-		strcpy(varTable.word[0], getcwd(cwd, sizeof(cwd)));//PWD
-	}
-	else if (strcmp(variable, varTable.var[1]) == 0) {
-		strcpy(varTable.word[1], getcwd(cwd, sizeof(cwd)));//HOME. FIXME: home directory reassignment should not be to current directory.
-	}
-	else if (strcmp(variable, varTable.var[2]) == 0) {
-		strcpy(varTable.word[2], "Nutshell DEV 0.2");//PROMPT
-	}
-	else if (strcmp(variable, varTable.var[3]) == 0) {
-		strcpy(varTable.word[3], "/bin");//PATH
-	}
-	else {
-		return 1;//no variable found
-	}
-}
-=======
 int unsetEnvVariable(char* variable)
 {
 	if(!strcmp("HOME", variable))
@@ -226,4 +207,3 @@ void displayEnv()
         printf("%s=%s\n", varTable.var[i], varTable.word[i]);
     }
 }
->>>>>>> 33fb03c6e355b35c8d576b5a772fbde97b55d8cf

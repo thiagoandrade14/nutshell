@@ -30,7 +30,8 @@ struct aTable {
 void shell_init();
 void printPrompt();
 void pushAlias(char* name, char* word);
-
+char* subAliases(char* name);
+bool ifAlias(char* name);
 
 //globals
 struct evTable varTable;

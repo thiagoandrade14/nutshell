@@ -15,6 +15,12 @@ The only commands that run are:
 "usetenv name"*, not properly working.*
 
 ## Known BUGS ##
+<<<<<<< HEAD
 1. HOME directory substitution with the tilde character (~) only works when PWD == HOME. If PWD is (for instance) HOME/foo, the prompt with PWD does not display "~/foo".
 2. If a syntax error occur, the shell unexpectedly exits. This must be fixed.
 3. Several bugs involving reassigning an existing alias or nested alias. 
+=======
+1. HOME directory substitution with the tilde character ~ only works when PWD = HOME. If PWD is (for instance) HOME/foo, the prompt with PWD does not display "~/foo".
+2. If a syntax error occur, the shell unexpectedly exits. This must be fixed.
+>>>>>>> 6de591d1be4cec91a0ceda143a0a55e96f8048e2
+3. Several bugs involving reassigning an existing alias or nested alias.

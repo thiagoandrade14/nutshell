@@ -14,6 +14,7 @@ void displayAlias();
 int removeAlias(char* name);
 int setEnvVariable(char* variable, char* word);
 int unsetEnvVariable(char* variable);
+void displayEnv();
 %}
 
 %union {char *string;}
@@ -32,7 +33,7 @@ cmd_line    :
 	| UNALIAS WORD END 		{removeAlias($2); return 1;	}
 	| SETENV WORD WORD END	{setEnvVariable($2, $3); return 1; }
 	| UNSETENV WORD END		{unsetEnvVariable($2); return 1; }
-	| PRINTENV END			{		}
+	| PRINTENV END			{ displayEnv(); return 1; }
 
 %%
 int yyerror(char *s) {
@@ -132,42 +133,95 @@ int removeAlias(char* name) {
 		}
 	}
 }
-int setEnvVariable(char* variable, char* word){
-	if (strcmp(variable, varTable.var[0]) == 0) {
-		strcpy(varTable.word[0], word); //PWD
-		return 1;
-	}
-	else if (strcmp(variable, varTable.var[1]) == 0) {
-		strcpy(varTable.word[1], word);//HOME
-		return 1;
-	}
-	else if (strcmp(variable, varTable.var[2]) == 0) {
-		strcpy(varTable.word[2], word);//PROMPT
-		return 1;
-	}
-	else if (strcmp(variable, varTable.var[3]) == 0) {
-		strcpy(varTable.word[3], word);//PATH
-		return 1;
-	}
-	else {
-		return 1; //no variable found
-	}
+int setEnvVariable(char* variable, char* word)
+{
+	for(unsigned int i = 0; i < varIndex; i++)
+    {
+        if(!strcmp(varTable.var[i], variable))
+        {
+            strcpy(varTable.word[i], word);
+            return 1;
+        }
+    }
+    if(varIndex < 128)
+    {
+        strcpy(varTable.var[varIndex], variable);
+        strcpy(varTable.word[varIndex], word);
+        varIndex++;
+        return 1;
+    }
+    else
+    {
+        printf("Environemental variables full. \n");
+        return 1;
+    }
 }
 //unset will restore to the default value of the variable.
-int unsetEnvVariable(char* variable){
-	if (strcmp(variable, varTable.var[0]) == 0) {
-		strcpy(varTable.word[0], getcwd(cwd, sizeof(cwd)));//PWD
-	}
-	else if (strcmp(variable, varTable.var[1]) == 0) {
-		strcpy(varTable.word[1], getcwd(cwd, sizeof(cwd)));//HOME. FIXME: home directory reassignment should not be to current directory.
-	}
-	else if (strcmp(variable, varTable.var[2]) == 0) {
-		strcpy(varTable.word[2], "Nutshell DEV 0.15");//PROMPT
-	}
-	else if (strcmp(variable, varTable.var[3]) == 0) {
-		strcpy(varTable.word[3], "/bin");//PATH
-	}
-	else {
-		return 1;//no variable found
-	}
+int unsetEnvVariable(char* variable)
+{
+	if(!strcmp("HOME", variable))
+    {
+        char* homev = getenv("HOME");
+    	strcpy(varTable.word[1], homev);
+    }
+    else if(!strcmp("USER", variable))
+    {
+        char* username = getenv("USER");
+        strcpy(varTable.word[4], username);
+    }
+    else if(!strcmp("PATH", variable))
+    {
+        char* pathv = getenv("PATH");
+	    strcpy(varTable.word[3], pathv);
+    }
+    else if(!strcmp("PWD", variable))
+    {
+        getcwd(cwd, sizeof(cwd));
+	    strcpy(varTable.word[0], cwd);
+    }
+    else if(!strcmp("PROMPT", variable))
+    {
+        strcpy(varTable.word[2], "Nutshell DEV 0.2");
+    }
+    else
+    {
+        int found = 0;
+        for(unsigned int i = 0; i < varIndex; i++)
+        {
+            if(!found)
+            {
+                if(!strcmp(variable, varTable.var[i]))
+                {
+                    found = 1;
+                    strcpy(varTable.var[i], "");
+                    strcpy(varTable.word[i], "");
+                }
+            }
+            if(found)
+            {
+                strcpy(varTable.var[i], varTable.var[i+1]);
+                strcpy(varTable.word[i], varTable.word[i+1]);
+                strcpy(varTable.var[i+1], "");
+                strcpy(varTable.word[i+1], "");
+            }
+        }
+        if(found)
+        {
+            varIndex--;
+            return 1;
+        }
+        else
+        {
+            printf("Could not locate environemental variable.\n");
+            return 1;
+        }
+    }
+}
+
+void displayEnv()
+{
+    for(unsigned int i = 0; i < varIndex; i++)
+    {
+        printf("%s=%s\n", varTable.var[i], varTable.word[i]);
+    }
 }

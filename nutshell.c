@@ -18,19 +18,24 @@ void shell_init() {
 	aliasHead = NULL;
 	varIndex = 0;
 	getcwd(cwd, sizeof(cwd));
-	char* username = getenv("USER");
 	strcpy(varTable.var[varIndex], "PWD");
 	strcpy(varTable.word[varIndex], cwd);
 	varIndex++;
+    char* homev = getenv("HOME");
 	strcpy(varTable.var[varIndex], "HOME");
-	strcpy(varTable.word[varIndex], cwd); //fixme: home directory should be home/"username"
+	strcpy(varTable.word[varIndex], homev); //fixme: home directory should be home/"username"
 	varIndex++;
 	strcpy(varTable.var[varIndex], "PROMPT");
 	strcpy(varTable.word[varIndex], "Nutshell DEV 0.2");
 	varIndex++;
+    char* pathv = getenv("PATH");
 	strcpy(varTable.var[varIndex], "PATH");
-	strcpy(varTable.word[varIndex], "/bin");
+	strcpy(varTable.word[varIndex], pathv);
 	varIndex++;
+    char* username = getenv("USER");
+    strcpy(varTable.var[varIndex], "USER");
+    strcpy(varTable.word[varIndex], username);
+    varIndex++;
 	printf("Initialization complete. Username is %s\n", username);
 }
 //                                                                                         Print Prompt - Prints cwd

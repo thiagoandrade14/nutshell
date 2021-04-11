@@ -54,6 +54,9 @@ int cdHome() {
 }
 
 int runCD(char* arg) {
+	while (isAlias(arg)) {
+		arg = subAlias(arg);
+	}
     if (arg[0] != '/') { // arg is relative path
 		strcat(varTable.word[0], "/");
 		strcat(varTable.word[0], arg);
@@ -163,7 +166,7 @@ int unsetEnvVariable(char* variable)
     }
     else if(!strcmp("PROMPT", variable))
     {
-        strcpy(varTable.word[2], "Nutshell DEV 0.2");
+        strcpy(varTable.word[2], "Nutshell DEV 0.3");
     }
     else
     {

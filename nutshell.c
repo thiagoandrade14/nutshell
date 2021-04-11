@@ -26,7 +26,7 @@ void shell_init() {
 	strcpy(varTable.word[varIndex], homev); //fixme: home directory should be home/"username"
 	varIndex++;
 	strcpy(varTable.var[varIndex], "PROMPT");
-	strcpy(varTable.word[varIndex], "Nutshell DEV 0.2");
+	strcpy(varTable.word[varIndex], "Nutshell DEV 0.3");
 	varIndex++;
     char* pathv = getenv("PATH");
 	strcpy(varTable.var[varIndex], "PATH");
@@ -85,7 +85,7 @@ void pushAlias(char* name, char* word) {
 		current->next = newAlias;
 	}	
 }
-char* subAliases(char* name) {
+char* subAlias(char* name) {
     struct aTable* current = aliasHead;
     while (current != NULL) {
         if (strcmp(current->name, name) == 0) {
@@ -95,7 +95,7 @@ char* subAliases(char* name) {
     }
     return name;
 }
-bool ifAlias(char* name){
+bool isAlias(char* name){
     struct aTable* current = aliasHead;
     while (current != NULL) {
         if(strcmp(current->name, name) == 0) {

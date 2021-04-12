@@ -23,10 +23,10 @@ void shell_init() {
 	varIndex++;
     char* homev = getenv("HOME");
 	strcpy(varTable.var[varIndex], "HOME");
-	strcpy(varTable.word[varIndex], homev); //fixme: home directory should be home/"username"
+	strcpy(varTable.word[varIndex], homev);
 	varIndex++;
 	strcpy(varTable.var[varIndex], "PROMPT");
-	strcpy(varTable.word[varIndex], "Nutshell DEV 0.3");
+	strcpy(varTable.word[varIndex], "Nutshell DEV 0.4");
 	varIndex++;
     char* pathv = getenv("PATH");
 	strcpy(varTable.var[varIndex], "PATH");

@@ -16,6 +16,7 @@ int setEnvVariable(char* variable, char* word);
 int unsetEnvVariable(char* variable);
 void displayEnv();
 int runCommand(char* command);
+extern char** environ;
 %}
 
 %union {char *string;}
@@ -25,19 +26,23 @@ int runCommand(char* command);
 
 %%
 cmd_line    :
-    BYE END					{exit(1); return 1; }
-    | CD WORD END 			{runCD($2); return 1; }
-	| CD HOME END			{cdHome(); return 1; }
-	| CD END				{cdHome(); return 1; }
-	| ALIAS WORD WORD END	{runSetAlias($2, $3); return 1; }
-	| ALIAS WORD COMMAND END {runSetAlias($2, $3); return 1; }
-	| ALIAS END				{displayAlias(); return 1; }
-	| UNALIAS WORD END 		{removeAlias($2); return 1;	}
-	| SETENV WORD WORD END	{setEnvVariable($2, $3); return 1; }
-	| UNSETENV WORD END		{unsetEnvVariable($2); return 1; }
-	| PRINTENV END			{displayEnv(); return 1; }
-	| COMMAND END			{runCommand($1); return 1; }
-    | error END             {return 1;}
+    BYE END					                {exit(1); return 1; }
+    | END                                   {exit(1); return 1; }
+    | CD WORD END 			                {runCD($2); return 1; }
+	| CD HOME END			                {cdHome(); return 1; }
+	| CD END				                {cdHome(); return 1; }
+	| ALIAS WORD WORD END	                {runSetAlias($2, $3); return 1; }
+	| ALIAS WORD COMMAND END                {runSetAlias($2, $3); return 1; }
+	| ALIAS END				                {displayAlias(); return 1; }
+	| UNALIAS WORD END 		                {removeAlias($2); return 1;	}
+	| SETENV WORD WORD END	                {setEnvVariable($2, $3); return 1; }
+	| UNSETENV WORD END		                {unsetEnvVariable($2); return 1; }
+	| PRINTENV END			                {displayEnv(); return 1; }
+	| COMMAND END			                {runCommand($1); return 1; }
+    | COMMAND WORD END                      {               }
+    | COMMAND WORD WORD END                 {               }
+    | COMMAND WORD WORD WORD END            {              }
+    | error END                             {return 1;}
 
 %%
 void yyerror(char *s) {
@@ -170,7 +175,7 @@ int unsetEnvVariable(char* variable)
     }
     else if(!strcmp("PROMPT", variable))
     {
-        strcpy(varTable.word[2], "Nutshell DEV 0.3");
+        strcpy(varTable.word[2], "Nutshell DEV 0.4");
     }
     else
     {
@@ -214,7 +219,26 @@ void displayEnv()
         printf("%s=%s\n", varTable.var[i], varTable.word[i]);
     }
 }
+//FIXME: it only works with no arguments so far.
 int runCommand(char* command) {
-	printf("Request for command %s received. \n", command);
-	return 1;
+    char* args[] = { command, varTable.word[0], NULL};
+    char* binaryAddress = (char*) malloc(128*sizeof(char));
+    strcpy(binaryAddress, "/bin/");
+    strcat(binaryAddress, command);
+    pid_t pid = fork();
+    if (pid == -1) {
+        printf("\nFork failed.\n");
+    }
+    else if (pid == 0) {
+        printf("Request for command %s received by child.\nTrying to process command...\n", command);
+        if (execve(binaryAddress, args, environ) < 0) {
+            printf("Error running %s\n", args[0]);
+        }
+        exit(0);
+    }
+    else {
+        wait(NULL);
+        printf("Returning to parent process.\n");
+        return 1;
+    }
 }

@@ -10,7 +10,7 @@
 
 CHAR            [.A-Za-z0-9!\/_-][.A-Za-z0-9!\/_-]*
 ANYCHAR            [)(*&%$#@!`;,\.a-zA-Z0-9'/_*= -][)(*&%$#@!`;,\.a-zA-Z0-9'/_*= -]*
-TILDE               ~+
+TILDE               ~
 WHITESPACE          [ \t]+
 METACHARACTER       [<>"|\&]+
 COMMAND             ls|pwd|date|rm|ssh|ping|cat|mkdir|rmdir|wc|grep|echo
@@ -20,21 +20,22 @@ COMMAND             ls|pwd|date|rm|ssh|ping|cat|mkdir|rmdir|wc|grep|echo
 <string_condition>[\"]          {BEGIN(INITIAL);}
 
 
-bye             { return BYE;   }
-cd              { return CD;    }
-alias           { return ALIAS; }
-unalias         { return UNALIAS; }
-setenv          { return SETENV; }
-unsetenv        { return UNSETENV; }
-printenv        { return PRINTENV; }
-"\n"            { return END;   }
-{WHITESPACE}+   { /*ignore whitespace*/  }
-[\"]            { BEGIN(string_condition); }
-{TILDE}         { return HOME;  }
-{COMMAND}       { yylval.string = strdup(yytext);
-                    return COMMAND; }
-{CHAR}+         { yylval.string = strdup(yytext);
-                    return WORD; 
-                }
-{METACHARACTER} {       }
+bye                             { return BYE;   }
+cd                              { return CD;    }
+alias                           { return ALIAS; }
+unalias                         { return UNALIAS; }
+setenv                          { return SETENV; }
+unsetenv                        { return UNSETENV; }
+printenv                        { return PRINTENV; }
+"\n"                            { return END;   }
+{WHITESPACE}+                   { /*ignore whitespace*/  }
+[\"]                            { BEGIN(string_condition); }
+{TILDE}                         { yylval.string = varTable.word[1];
+                                return HOME;  }
+{COMMAND}                       { yylval.string = strdup(yytext);
+                                return COMMAND; }
+{CHAR}+                         { yylval.string = strdup(yytext);
+                                return WORD; 
+                                }
+{METACHARACTER}                 {/*TBD*/       }
 %%

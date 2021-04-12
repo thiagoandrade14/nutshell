@@ -13,6 +13,7 @@ ANYCHAR            [)(*&%$#@!`;,\.a-zA-Z0-9'/_*= -][)(*&%$#@!`;,\.a-zA-Z0-9'/_*=
 TILDE               ~+
 WHITESPACE          [ \t]+
 METACHARACTER       [<>"|\&]+
+COMMAND             ls|pwd|date|rm|ssh|ping|cat|mkdir|rmdir|wc|grep|echo
 
 %%
 <string_condition>{ANYCHAR}+    { yylval.string = strdup(yytext); return WORD;}
@@ -27,12 +28,13 @@ setenv          { return SETENV; }
 unsetenv        { return UNSETENV; }
 printenv        { return PRINTENV; }
 "\n"            { return END;   }
+{WHITESPACE}+   { /*ignore whitespace*/  }
 [\"]            { BEGIN(string_condition); }
 {TILDE}         { return HOME;  }
-{CHAR}+         {
-                    yylval.string = strdup(yytext);
+{COMMAND}       { yylval.string = strdup(yytext);
+                    return COMMAND; }
+{CHAR}+         { yylval.string = strdup(yytext);
                     return WORD; 
                 }
 {METACHARACTER} {       }
-{WHITESPACE}+   {      }
 %%

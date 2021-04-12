@@ -6,7 +6,7 @@
 #include "nutshell.h"
 
 int yylex(void);
-int yyerror(char *s);
+void yyerror(char *s);
 int cdHome(void);
 int runCD(char* arg);
 int runSetAlias(char* name, char* word);
@@ -15,12 +15,13 @@ int removeAlias(char* name);
 int setEnvVariable(char* variable, char* word);
 int unsetEnvVariable(char* variable);
 void displayEnv();
+int runCommand(char* command);
 %}
 
 %union {char *string;}
 
 %start cmd_line
-%token <string> BYE CD WORD ALIAS UNALIAS HOME SETENV UNSETENV PRINTENV END
+%token <string> BYE CD WORD ALIAS UNALIAS HOME SETENV UNSETENV PRINTENV COMMAND END
 
 %%
 cmd_line    :
@@ -29,16 +30,19 @@ cmd_line    :
 	| CD HOME END			{cdHome(); return 1; }
 	| CD END				{cdHome(); return 1; }
 	| ALIAS WORD WORD END	{runSetAlias($2, $3); return 1; }
+	| ALIAS WORD COMMAND END {runSetAlias($2, $3); return 1; }
 	| ALIAS END				{displayAlias(); return 1; }
 	| UNALIAS WORD END 		{removeAlias($2); return 1;	}
 	| SETENV WORD WORD END	{setEnvVariable($2, $3); return 1; }
 	| UNSETENV WORD END		{unsetEnvVariable($2); return 1; }
-	| PRINTENV END			{ displayEnv(); return 1; }
+	| PRINTENV END			{displayEnv(); return 1; }
+	| COMMAND END			{runCommand($1); return 1; }
+    | error END             {return 1;}
 
 %%
-int yyerror(char *s) {
+void yyerror(char *s) {
     printf("An error has occurred: %s\n", s);
-    return 1;
+    return;
 }
 //project specification: cd with no arguments brings to home directory.
 int cdHome() {
@@ -209,4 +213,8 @@ void displayEnv()
     {
         printf("%s=%s\n", varTable.var[i], varTable.word[i]);
     }
+}
+int runCommand(char* command) {
+	printf("Request for command %s received. \n", command);
+	return 1;
 }

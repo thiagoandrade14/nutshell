@@ -47,7 +47,25 @@ void printPrompt() {
 		printf("%s:~$ ", varTable.word[2]); //print prompt + ~
 	}
 	else {
-		printf("%s:%s$ ", varTable.word[2], varTable.word[0]); //print prompt + PWD
+        char temp[128];
+        char rest[128];
+        for(unsigned int i = 0; i < strlen(varTable.word[1]); i++)
+        {
+            temp[i + 1] = 0;
+            temp[i] =  varTable.word[0][i];
+        }
+        if(!strcmp(temp, varTable.word[1]))
+        {
+            for(unsigned int i = strlen(temp) + 1; i < 128; i++)
+            {
+                rest[i - strlen(temp) - 1] = varTable.word[0][i];
+            }
+            printf("%s:~/%s$ ", varTable.word[2], rest);
+        }
+        else
+        {
+		    printf("%s:%s$ ", varTable.word[2], varTable.word[0]); //print prompt + PWD
+        }
 	}
 }
 

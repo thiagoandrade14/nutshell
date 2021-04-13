@@ -231,7 +231,7 @@ void displayEnv()
 }
 //FIXME: it only works with no arguments so far.
 int runCommand(char* command) {
-    char* args[] = { command, varTable.word[0], NULL};
+    char* args[] = { command, NULL};
     char* binaryAddress = (char*) malloc(128*sizeof(char));
     strcpy(binaryAddress, "/bin/");
     strcat(binaryAddress, command);

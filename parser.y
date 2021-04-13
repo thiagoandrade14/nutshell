@@ -74,6 +74,8 @@ int cdHome() {
 }
 
 int runCD(char* arg) {
+//check for alias
+//if alias is found, make substitution
 	while (isAlias(arg)) {
 		arg = subAlias(arg);
 	}
@@ -231,6 +233,13 @@ void displayEnv()
     }
 }
 int runCommand(char* command) {
+    //check for alias
+    //if alias is found, make substitution
+    while (isAlias(command)) {
+		strcpy(command, subAlias(command));
+        strcpy(builtinargz[0], subAlias(command));
+	}
+
     reverse(builtinargz, argzbin);
     char* binaryAddress = (char*) malloc(128*sizeof(char));
     strcpy(binaryAddress, "/bin/");

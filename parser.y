@@ -19,16 +19,17 @@ int runCommand(char* command);
 extern char** environ;
 void builtins(char* built);
 char builtinargs[3][128];
-char builtinargz[10][128];
+char* builtinargz[10];
 void add_arg(char* arg);
 void add_argz(char* arg);
+void reverse(char** argz, int size);
 void test();
 %}
 
 %union {char *string;}
 
 %start cmd_line
-%token <string> BYE CD WORD HOME COMMAND END METACHARACTER BUILTIN
+%token <string> BYE CD WORD HOME END METACHARACTER BUILTIN
 
 %%
 cmd_line :
@@ -43,7 +44,7 @@ cmd_line :
     ;
 line :
     BUILTIN arg         {builtins($1);}
-    |   WORD argz       {runCommand($1);}
+    |   WORD argz       {add_argz($1); runCommand($1);}
     ;
 arg :
     %empty
@@ -229,29 +230,30 @@ void displayEnv()
         printf("%s=%s\n", varTable.var[i], varTable.word[i]);
     }
 }
-//FIXME: it only works with no arguments so far.
 int runCommand(char* command) {
-    char* args[] = { command, NULL};
+    reverse(builtinargz, argzbin);
     char* binaryAddress = (char*) malloc(128*sizeof(char));
     strcpy(binaryAddress, "/bin/");
-    strcat(binaryAddress, command);
+    strcat(binaryAddress, builtinargz[0]);
     pid_t pid = fork();
     if (pid == -1) {
         printf("\nFork failed.\n");
     }
     else if (pid == 0) {
-        printf("Request for command %s received by child.\nTrying to process command...\n", command);
-        if (execve(binaryAddress, args, environ) < 0) {
-            printf("Error running %s\n", args[0]);
+        if (execve(binaryAddress, builtinargz, environ) < 0) {
+            printf("Error running %s\n", builtinargz[0]);
         }
         exit(0);
     }
     else {
         wait(NULL);
-        printf("Returning to parent process.\n");
+        for (int i = 0; builtinargz[i] != NULL; i++) {
+            free(builtinargz[i]);
+            builtinargz[i] = NULL;
+        }
+        argzbin = 0;
         return 1;
     }
-    argzbin = 0;
 }
 
 void builtins(char* built)
@@ -323,13 +325,22 @@ void add_arg(char* arg)
     strcpy(builtinargs[argbin], arg);
     argbin++;
 }
-
+void reverse(char** argz, int size) {
+    char* temp;
+    int j = size - 1;
+    for (int i = 0; i < j; i++) {
+        temp = argz[i];
+        argz[i] = argz[j];
+        argz[j] = temp;
+        j--;
+    }
+}
 void add_argz(char* arg)
 {
+    builtinargz[argzbin] = (char*) malloc(32*(sizeof(char)));
     strcpy(builtinargz[argzbin], arg);
     argzbin++;
 }
-
 void test()
 {
     

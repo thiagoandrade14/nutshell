@@ -15,5 +15,11 @@ The following built-in commands are supported:
 "setenv name word"
 "usetenv name"
 
+Updated parser to have better time understanding recursive nature of general command layout.
+Built-in commands are now all interpreted in the same manner (excluding cd)
+General commands set as words so that ./ executables can be treated the same in general command layout.
+  All command arguments will be written to add_argz() to be indexed with argzbin.
+New parsing architecture allows for commands/builtins with arguments to be understood with a metacharacter to seperate.
+
 ## Known BUGS ##
-N/A
+Will have to figure out what to do with our output; I was attempting to write it to an intermediate buffer so that we could choose that buffer to either write to a file and clear or print outside the parser, but was unable to make this work so I reverted the changes. 

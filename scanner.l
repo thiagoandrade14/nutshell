@@ -13,7 +13,8 @@ ANYCHAR            [)(*&%$#@!`;,\.a-zA-Z0-9'/_*= -][)(*&%$#@!`;,\.a-zA-Z0-9'/_*=
 TILDE               ~
 WHITESPACE          [ \t]+
 METACHARACTER       [<>"|\&]+
-COMMAND             ls|pwd|date|rm|ssh|ping|cat|mkdir|rmdir|wc|grep|echo
+/*COMMAND             ls|pwd|date|rm|ssh|ping|cat|mkdir|rmdir|wc|grep|echo*/
+BUILTIN             alias|unalias|setenv|unsetenv|printenv
 
 %%
 <string_condition>{ANYCHAR}+    { yylval.string = strdup(yytext); return WORD;}
@@ -21,21 +22,17 @@ COMMAND             ls|pwd|date|rm|ssh|ping|cat|mkdir|rmdir|wc|grep|echo
 
 
 bye                             { return BYE;   }
-cd                              { return CD;    }
-alias                           { return ALIAS; }
-unalias                         { return UNALIAS; }
-setenv                          { return SETENV; }
-unsetenv                        { return UNSETENV; }
-printenv                        { return PRINTENV; }
+cd                              { return CD; }
+{BUILTIN}                       { yylval.string = strdup(yytext); 
+                                return BUILTIN; }
 "\n"                            { return END;   }
 {WHITESPACE}+                   { /*ignore whitespace*/  }
 [\"]                            { BEGIN(string_condition); }
 {TILDE}                         { yylval.string = varTable.word[1];
                                 return HOME;  }
-{COMMAND}                       { yylval.string = strdup(yytext);
-                                return COMMAND; }
+
 {CHAR}+                         { yylval.string = strdup(yytext);
                                 return WORD; 
                                 }
-{METACHARACTER}                 {/*TBD*/       }
+{METACHARACTER}                 { return METACHARACTER; }
 %%

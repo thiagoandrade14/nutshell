@@ -17,32 +17,42 @@ int unsetEnvVariable(char* variable);
 void displayEnv();
 int runCommand(char* command);
 extern char** environ;
+void builtins(char* built);
+char builtinargs[3][128];
+char builtinargz[10][128];
+void add_arg(char* arg);
+void add_argz(char* arg);
+void test();
 %}
 
 %union {char *string;}
 
 %start cmd_line
-%token <string> BYE CD WORD ALIAS UNALIAS HOME SETENV UNSETENV PRINTENV COMMAND END
+%token <string> BYE CD WORD HOME COMMAND END METACHARACTER BUILTIN
 
 %%
-cmd_line    :
-    BYE END					                {exit(1); return 1; }
-    | END                                   {exit(1); return 1; }
-    | CD WORD END 			                {runCD($2); return 1; }
-	| CD HOME END			                {cdHome(); return 1; }
-	| CD END				                {cdHome(); return 1; }
-	| ALIAS WORD WORD END	                {runSetAlias($2, $3); return 1; }
-	| ALIAS WORD COMMAND END                {runSetAlias($2, $3); return 1; }
-	| ALIAS END				                {displayAlias(); return 1; }
-	| UNALIAS WORD END 		                {removeAlias($2); return 1;	}
-	| SETENV WORD WORD END	                {setEnvVariable($2, $3); return 1; }
-	| UNSETENV WORD END		                {unsetEnvVariable($2); return 1; }
-	| PRINTENV END			                {displayEnv(); return 1; }
-	| COMMAND END			                {runCommand($1); return 1; }
-    | COMMAND WORD END                      {               }
-    | COMMAND WORD WORD END                 {               }
-    | COMMAND WORD WORD WORD END            {              }
-    | error END                             {return 1;}
+cmd_line :
+    CD WORD END         {runCD($2); return 1;}
+    |   CD HOME END     {cdHome(); return 1;}
+    |   CD END          {cdHome(); return 1;}
+    |   BYE END         {exit(1); return 1;}
+    |   END             {return 1;}
+    |   line END        {return 1;}
+    |   line METACHARACTER line {test(); return 1;}
+    |   error END       {return 1;}
+    ;
+line :
+    BUILTIN arg         {builtins($1);}
+    |   WORD argz       {runCommand($1);}
+    ;
+arg :
+    %empty
+    |   WORD arg        {add_arg($1);}
+    ; 
+argz :
+    %empty
+    |   WORD argz        {add_argz($1);}
+    ; 
 
 %%
 void yyerror(char *s) {
@@ -241,4 +251,86 @@ int runCommand(char* command) {
         printf("Returning to parent process.\n");
         return 1;
     }
+    argzbin = 0;
+}
+
+void builtins(char* built)
+{
+    if((!strcmp(built, "alias")))
+    {
+        if(argbin == 0)
+        {
+            displayAlias();
+        }
+        else if(argbin == 2)
+        {   
+            runSetAlias(builtinargs[1], builtinargs[0]);
+        }
+        else //Error
+        {
+            
+        }
+    }
+    else if(!strcmp(built, "unalias"))
+    {
+        if(argbin == 1)
+        {
+            removeAlias(builtinargs[0]);
+        }
+        else //Error
+        {
+            
+        }
+    }
+    else if(!strcmp(built, "setenv"))
+    {
+        if(argbin == 2)
+        {
+            setEnvVariable(builtinargs[1], builtinargs[0]);
+        }
+        else //Error
+        {
+            
+        }
+    }
+    else if(!strcmp(built, "unsetenv"))
+    {
+        if(argbin == 1)
+        {
+            unsetEnvVariable(builtinargs[0]);
+        }
+        else //Error
+        {
+            
+        }
+    }
+    else if(!strcmp(built, "printenv"))
+    {
+        if(argbin == 0)
+        {
+            displayEnv();
+        }
+        else //Error
+        {
+            
+        }
+    }
+    argbin = 0;
+}
+
+void add_arg(char* arg)
+{
+    strcpy(builtinargs[argbin], arg);
+    argbin++;
+}
+
+void add_argz(char* arg)
+{
+    strcpy(builtinargz[argzbin], arg);
+    argzbin++;
+}
+
+void test()
+{
+    
 }

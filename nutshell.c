@@ -17,6 +17,8 @@ void shell_init() {
 	printf("Nutshell is initializing...\n");
 	aliasHead = NULL;
 	varIndex = 0;
+	argbin = 0;
+	argzbin = 0;
 	getcwd(cwd, sizeof(cwd));
 	strcpy(varTable.var[varIndex], "PWD");
 	strcpy(varTable.word[varIndex], cwd);
@@ -122,6 +124,14 @@ bool isAlias(char* name){
         current = current->next;
     }
     return false;
+}
+
+void clearbuff()
+{
+	for(unsigned int i = 0; i < 1024; i++)
+	{
+		buff[i] = 0;
+	}
 }
 
 int main() {

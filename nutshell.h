@@ -37,6 +37,9 @@ bool isAlias(char* name);
 struct evTable varTable;
 struct aTable* aliasHead;
 int varIndex;
+int argbin;
+int argzbin;
 char cwd[1024];
+char buff[1024];
 
 #endif

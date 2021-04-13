@@ -20,8 +20,6 @@ Unix supported commands in the bin directory should also run (e.g. ls, pwd, etc.
 ## Known BUGS ##
 Will have to figure out what to do with our output; I was attempting to write it to an intermediate buffer so that we could choose that buffer to either write to a file and clear or print outside the parser, but was unable to make this work so I reverted the changes. 
 
-ALIAS does not work properly (it only prints the alias table so far), since I had to remove its functionality to test other code a while back. Working on implementing it again now.
-
 ## Internal notes ##
 Updated parser to have better time understanding recursive nature of general command layout.
 Built-in commands are now all interpreted in the same manner (excluding cd)

@@ -235,12 +235,11 @@ void displayEnv()
 int runCommand(char* command) {
     //check for alias
     //if alias is found, make substitution
+    reverse(builtinargz, argzbin);
     while (isAlias(command)) {
 		strcpy(command, subAlias(command));
         strcpy(builtinargz[0], subAlias(command));
 	}
-
-    reverse(builtinargz, argzbin);
     char* binaryAddress = (char*) malloc(128*sizeof(char));
     strcpy(binaryAddress, "/bin/");
     strcat(binaryAddress, builtinargz[0]);

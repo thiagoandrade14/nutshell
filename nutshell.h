@@ -24,8 +24,6 @@ struct aTable {
     char word[128];
     struct aTable* next;
 };
-
-
 //function declarations
 void shell_init();
 void printPrompt();

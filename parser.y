@@ -76,9 +76,9 @@ int cdHome() {
 int runCD(char* arg) {
 //check for alias
 //if alias is found, make substitution
-	while (isAlias(arg)) {
+	/*while (isAlias(arg)) {
 		arg = subAlias(arg);
-	}
+	}*/
     if (arg[0] != '/') { // arg is relative path
 		strcat(varTable.word[0], "/");
 		strcat(varTable.word[0], arg);
@@ -233,13 +233,16 @@ void displayEnv()
     }
 }
 int runCommand(char* command) {
+    //Because of the recursion of the parser,
+    //reversing the argument list is needed.
+    reverse(builtinargz, argzbin);
+
     //check for alias
     //if alias is found, make substitution
-    reverse(builtinargz, argzbin);
-    while (isAlias(command)) {
+    /*while (isAlias(command)) {
 		strcpy(command, subAlias(command));
         strcpy(builtinargz[0], subAlias(command));
-	}
+	}*/
     char* binaryAddress = (char*) malloc(128*sizeof(char));
     strcpy(binaryAddress, "/bin/");
     strcat(binaryAddress, builtinargz[0]);
@@ -249,7 +252,7 @@ int runCommand(char* command) {
     }
     else if (pid == 0) {
         if (execve(binaryAddress, builtinargz, environ) < 0) {
-            printf("Error running %s\n", builtinargz[0]);
+            printf("Error running %s. Command not found. \n", builtinargz[0]);
         }
         exit(0);
     }

@@ -6,6 +6,7 @@
 #include<stdlib.h>
 #include<unistd.h>
 #include<sys/types.h>
+#include<sys/stat.h>
 #include<sys/wait.h>
 #include<string.h>
 #include<stdbool.h>
@@ -24,6 +25,8 @@ struct aTable {
     char word[128];
     struct aTable* next;
 };
+
+
 //function declarations
 void shell_init();
 void printPrompt();
@@ -38,6 +41,6 @@ int varIndex;
 int argbin;
 int argzbin;
 char cwd[1024];
-char buff[1024];
-
+char buff[2056];
+int carry;
 #endif

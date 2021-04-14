@@ -81,6 +81,9 @@ int cdHome() {
 }
 
 int runCD(char* arg) {
+	while (isAlias(arg)) {
+		arg = subAlias(arg);
+	}
     if (arg[0] != '/') { // arg is relative path
 		strcat(varTable.word[0], "/");
 		strcat(varTable.word[0], arg);
@@ -249,6 +252,9 @@ void displayEnv()
 int runCommand(char* command) {
     if(carry == 0)
     {
+        int pipefd[2];
+        pipe(pipefd);
+
         reverse(builtinargz, argzbin);
         char* binaryAddress = (char*) malloc(128*sizeof(char));
         pid_t pid = fork();
@@ -257,7 +263,10 @@ int runCommand(char* command) {
         }
         else if (pid == 0) { //child process
             char** current = parsePATH();       //parse PATH variable into an array of strings.
-
+            close(pipefd[0]);
+            dup2(pipefd[1], 1);
+            dup2(pipefd[1], 2);
+            close(pipefd[1]);
             //builds the entire path of the executable, trying the
             //directories found in the PATH variable
             for (int i = 0; current[i] != NULL; i++) {
@@ -281,6 +290,8 @@ int runCommand(char* command) {
                 free(builtinargz[i]);
                 builtinargz[i] = NULL;
             }
+            close(pipefd[1]);
+            while(read(pipefd[0], buff, sizeof(buff)) != 0);
             argzbin = 0;
             return 1;
         }
@@ -291,11 +302,24 @@ int runCommand(char* command) {
         struct stat sb;
         if(stat(command, &sb) == 0 && sb.st_mode & S_IXUSR)
         {
-            printf("executable\n");
+            //printf("executable\n"); error...
         }
         else
         {
-            printf("not-executable\n");
+            //printf("not-executable\n");
+            //Write buffer to file
+            FILE *fp;
+            fp = fopen(command, "a+");
+            if(fputs(buff, fp) >= 0)
+            {
+                //success!
+            }
+            else
+            {
+                //failure
+            }
+            clearbuff();
+            fclose(fp);
         }
     }
 }

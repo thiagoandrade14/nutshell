@@ -33,6 +33,7 @@ void printPrompt();
 void pushAlias(char* name, char* word);
 char* subAlias(char* name);
 bool isAlias(char* name);
+void clearbuff();
 
 //globals
 struct evTable varTable;

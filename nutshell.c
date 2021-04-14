@@ -28,7 +28,7 @@ void shell_init() {
 	strcpy(varTable.word[varIndex], homev);
 	varIndex++;
 	strcpy(varTable.var[varIndex], "PROMPT");
-	strcpy(varTable.word[varIndex], "Nutshell DEV 0.4");
+	strcpy(varTable.word[varIndex], "Nutshell DEV 0.5");
 	varIndex++;
     char* pathv = getenv("PATH");
 	strcpy(varTable.var[varIndex], "PATH");

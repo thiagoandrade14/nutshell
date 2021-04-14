@@ -23,6 +23,7 @@ char* builtinargz[10];
 void add_arg(char* arg);
 void add_argz(char* arg);
 void reverse(char** argz, int size);
+char** parsePATH();
 void test();
 %}
 
@@ -188,7 +189,7 @@ int unsetEnvVariable(char* variable)
     }
     else if(!strcmp("PROMPT", variable))
     {
-        strcpy(varTable.word[2], "Nutshell DEV 0.4");
+        strcpy(varTable.word[2], "Nutshell DEV 0.5");
     }
     else
     {
@@ -237,26 +238,31 @@ int runCommand(char* command) {
     //reversing the argument list is needed.
     reverse(builtinargz, argzbin);
 
-    //check for alias
-    //if alias is found, make substitution
-    /*while (isAlias(command)) {
-		strcpy(command, subAlias(command));
-        strcpy(builtinargz[0], subAlias(command));
-	}*/
     char* binaryAddress = (char*) malloc(128*sizeof(char));
-    strcpy(binaryAddress, "/bin/");
-    strcat(binaryAddress, builtinargz[0]);
     pid_t pid = fork();
     if (pid == -1) {
         printf("\nFork failed.\n");
     }
-    else if (pid == 0) {
-        if (execve(binaryAddress, builtinargz, environ) < 0) {
+    else if (pid == 0) { //child process
+        char** current = parsePATH();       //parse PATH variable into an array of strings.
+
+        //builds the entire path of the executable, trying the
+        //directories found in the PATH variable
+        for (int i = 0; current[i] != NULL; i++) {
+            strcpy(binaryAddress, current[i]);
+            strcat(binaryAddress, "/");
+            strcat(binaryAddress, builtinargz[0]);
+            if (access(binaryAddress, F_OK) == 0) { //checks if the executable was found, then breaks the loop
+                break;
+            }         
+        }
+    if (execve(binaryAddress, builtinargz, environ) < 0) {
             printf("Error running %s. Command not found. \n", builtinargz[0]);
         }
+        
         exit(0);
     }
-    else {
+    else { //parent process
         wait(NULL);
         for (int i = 0; builtinargz[i] != NULL; i++) {
             free(builtinargz[i]);
@@ -351,6 +357,34 @@ void add_argz(char* arg)
     builtinargz[argzbin] = (char*) malloc(32*(sizeof(char)));
     strcpy(builtinargz[argzbin], arg);
     argzbin++;
+}
+//Algorithm to parse path variable
+//stackoverflow/40196067
+char** parsePATH() {
+    char* newPATH = varTable.word[3];
+    int i;
+    int length = strlen(newPATH);
+    char delimiter = ':';
+    int delimiterCount = 0;
+    int currentDelimiter = 0;
+    for (i = 0; i < length; i++) {
+        if (newPATH[i] == delimiter) {
+            delimiterCount++;
+            newPATH[i] = '\0';
+        }
+    }
+    char** pathArray = malloc((delimiterCount+1)*32*sizeof(char));
+    pathArray[0] = newPATH;
+    for (i = 0; i < length; i++) {
+        if (newPATH[i] == '\0') {
+            currentDelimiter++;
+            pathArray[currentDelimiter] = newPATH + i + 1;
+            if (pathArray[currentDelimiter][0] == '\0') {
+                pathArray[currentDelimiter] = ".";
+            }
+        }
+    }
+    return pathArray;
 }
 void test()
 {

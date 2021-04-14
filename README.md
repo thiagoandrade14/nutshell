@@ -1,5 +1,5 @@
 # nutshell
-Version: 0.45 (April 13th, 2021)
+Version: 0.5 (April 13th, 2021)
 
 ## Installation ##
 Run "make" command in the main directory. Then run executable file named "shell".

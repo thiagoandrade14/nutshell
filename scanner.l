@@ -31,14 +31,8 @@ cd                              { return CD; }
 {TILDE}                         { yylval.string = varTable.word[1];
                                 return HOME;  }
 
-{CHAR}+                         { if(isAlias(yytext)) {
-                                    char *yycopy = strdup( subAlias(yytext) );
-                                    for ( int i = strlen(subAlias(yytext)) - 1; i >= 0; --i )
-                                        unput( yycopy[i] );
-                                    free( yycopy );
-                                } else {
-                                yylval.string = strdup(yytext);
-                                return WORD; }
+{CHAR}+                         { yylval.string = strdup(yytext);
+                                return WORD; 
                                 }
 ">"                             { return MET_GT; }
 {METACHARACTER}                 { return METACHARACTER; }

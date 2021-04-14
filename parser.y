@@ -23,14 +23,13 @@ char* builtinargz[10];
 void add_arg(char* arg);
 void add_argz(char* arg);
 void reverse(char** argz, int size);
-char** parsePATH();
-void test();
+void met_gt();
 %}
 
 %union {char *string;}
 
 %start cmd_line
-%token <string> BYE CD WORD HOME END METACHARACTER BUILTIN
+%token <string> BYE CD WORD HOME END METACHARACTER BUILTIN MET_GT
 
 %%
 cmd_line :
@@ -40,7 +39,7 @@ cmd_line :
     |   BYE END         {exit(1); return 1;}
     |   END             {return 1;}
     |   line END        {return 1;}
-    |   line METACHARACTER line {test(); return 1;}
+    |   line METACH cmd_line 
     |   error END       {return 1;}
     ;
 line :
@@ -55,10 +54,14 @@ argz :
     %empty
     |   WORD argz        {add_argz($1);}
     ; 
-
+METACH :
+    MET_GT  {met_gt();}
+    ;
 %%
 void yyerror(char *s) {
-    printf("An error has occurred: %s\n", s);
+    char iter[256];
+    sprintf(iter, "An error has occurred: %s\n", s);
+    strcat(buff, iter);
     return;
 }
 //project specification: cd with no arguments brings to home directory.
@@ -69,17 +72,17 @@ int cdHome() {
 		return 1;
 	}
 	else {
-		printf("Failure: home directory not found\n");
+        char iter[256];
+		sprintf(iter, "Failure: home directory not found\n");
+        strcat(buff, iter);
 		return 1;
 	}
 }
 
 int runCD(char* arg) {
-//check for alias
-//if alias is found, make substitution
-	/*while (isAlias(arg)) {
+	while (isAlias(arg)) {
 		arg = subAlias(arg);
-	}*/
+	}
     if (arg[0] != '/') { // arg is relative path
 		strcat(varTable.word[0], "/");
 		strcat(varTable.word[0], arg);
@@ -91,7 +94,9 @@ int runCD(char* arg) {
 		else {
 			getcwd(cwd, sizeof(cwd));
 			strcpy(varTable.word[0], cwd);
-			printf("Directory not found.\n");
+            char iter[256];
+			sprintf(iter, "Directory not found.\n");
+            strcat(buff, iter);
 			return 1;
 		}
 	}
@@ -101,7 +106,9 @@ int runCD(char* arg) {
 			return 1;
 		}
 		else {
-			printf("Directory not found.\n");
+            char iter[256];
+			sprintf(iter, "Directory not found.\n");
+            strcat(buff, iter);
                 return 1;
 		}
 	}
@@ -113,7 +120,9 @@ int runSetAlias(char* name, char* word) {
 void displayAlias(){
 	struct aTable* current = aliasHead;
 	while (current != NULL) {
-		printf("%s=%s\n", current->name, current->word);
+        char iter[512];
+		sprintf(iter, "%s=%s\n", current->name, current->word);
+        strcat(buff, iter);
 		current = current->next;
 	}
 }
@@ -160,7 +169,9 @@ int setEnvVariable(char* variable, char* word)
     }
     else
     {
-        printf("Environemental variables full. \n");
+        char iter[256];
+        sprintf(iter, "Environemental variables full. \n");
+        strcat(buff, iter);
         return 1;
     }
 }
@@ -189,7 +200,7 @@ int unsetEnvVariable(char* variable)
     }
     else if(!strcmp("PROMPT", variable))
     {
-        strcpy(varTable.word[2], "Nutshell DEV 0.5");
+        strcpy(varTable.word[2], "Nutshell DEV 0.4");
     }
     else
     {
@@ -220,7 +231,9 @@ int unsetEnvVariable(char* variable)
         }
         else
         {
-            printf("Could not locate environemental variable.\n");
+            char iter[256];
+            sprintf(iter, "Could not locate environemental variable.\n");
+            strcat(buff, iter);
             return 1;
         }
     }
@@ -230,46 +243,50 @@ void displayEnv()
 {
     for(unsigned int i = 0; i < varIndex; i++)
     {
-        printf("%s=%s\n", varTable.var[i], varTable.word[i]);
+        char iter[256];
+        sprintf(iter, "%s=%s\n", varTable.var[i], varTable.word[i]);
+        strcat(buff, iter);
     }
 }
 int runCommand(char* command) {
-    //Because of the recursion of the parser,
-    //reversing the argument list is needed.
-    reverse(builtinargz, argzbin);
-
-    char* binaryAddress = (char*) malloc(128*sizeof(char));
-    pid_t pid = fork();
-    if (pid == -1) {
-        printf("\nFork failed.\n");
+    if(carry == 0)
+    {
+        reverse(builtinargz, argzbin);
+        char* binaryAddress = (char*) malloc(128*sizeof(char));
+        strcpy(binaryAddress, "/bin/");
+        strcat(binaryAddress, builtinargz[0]);
+        pid_t pid = fork();
+        if (pid == -1) {
+            printf("\nFork failed.\n");
+        }
+        else if (pid == 0) {
+            if (execve(binaryAddress, builtinargz, environ) < 0) {
+                printf("Error running %s\n", builtinargz[0]);
+            }
+            exit(0);
+        }
+        else {
+            wait(NULL);
+            for (int i = 0; builtinargz[i] != NULL; i++) {
+                free(builtinargz[i]);
+                builtinargz[i] = NULL;
+            }
+            argzbin = 0;
+            return 1;
+        }
     }
-    else if (pid == 0) { //child process
-        char** current = parsePATH();       //parse PATH variable into an array of strings.
-
-        //builds the entire path of the executable, trying the
-        //directories found in the PATH variable
-        for (int i = 0; current[i] != NULL; i++) {
-            strcpy(binaryAddress, current[i]);
-            strcat(binaryAddress, "/");
-            strcat(binaryAddress, builtinargz[0]);
-            if (access(binaryAddress, F_OK) == 0) { //checks if the executable was found, then breaks the loop
-                break;
-            }         
+    else
+    {
+        carry = 0;
+        struct stat sb;
+        if(stat(command, &sb) == 0 && sb.st_mode & S_IXUSR)
+        {
+            printf("executable\n");
         }
-    if (execve(binaryAddress, builtinargz, environ) < 0) {
-            printf("Error running %s. Command not found. \n", builtinargz[0]);
+        else
+        {
+            printf("not-executable\n");
         }
-        
-        exit(0);
-    }
-    else { //parent process
-        wait(NULL);
-        for (int i = 0; builtinargz[i] != NULL; i++) {
-            free(builtinargz[i]);
-            builtinargz[i] = NULL;
-        }
-        argzbin = 0;
-        return 1;
     }
 }
 
@@ -358,35 +375,7 @@ void add_argz(char* arg)
     strcpy(builtinargz[argzbin], arg);
     argzbin++;
 }
-//Algorithm to parse path variable
-//stackoverflow/40196067
-char** parsePATH() {
-    char* newPATH = varTable.word[3];
-    int i;
-    int length = strlen(newPATH);
-    char delimiter = ':';
-    int delimiterCount = 0;
-    int currentDelimiter = 0;
-    for (i = 0; i < length; i++) {
-        if (newPATH[i] == delimiter) {
-            delimiterCount++;
-            newPATH[i] = '\0';
-        }
-    }
-    char** pathArray = malloc((delimiterCount+1)*32*sizeof(char));
-    pathArray[0] = newPATH;
-    for (i = 0; i < length; i++) {
-        if (newPATH[i] == '\0') {
-            currentDelimiter++;
-            pathArray[currentDelimiter] = newPATH + i + 1;
-            if (pathArray[currentDelimiter][0] == '\0') {
-                pathArray[currentDelimiter] = ".";
-            }
-        }
-    }
-    return pathArray;
-}
-void test()
+void met_gt()
 {
-    
+    carry = 1;
 }

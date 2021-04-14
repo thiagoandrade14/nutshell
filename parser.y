@@ -283,6 +283,7 @@ int runCommand(char* command) {
                 }
                 exit(0);
             }
+            return 1;
         }
         else { //parent process
             wait(NULL);
@@ -299,28 +300,20 @@ int runCommand(char* command) {
     else
     {
         carry = 0;
-        struct stat sb;
-        if(stat(command, &sb) == 0 && sb.st_mode & S_IXUSR)
+        //printf("not-executable\n");
+        //Write buffer to file
+        FILE *fp;
+        fp = fopen(command, "a+");
+        if(fputs(buff, fp) >= 0)
         {
-            //printf("executable\n"); error...
+            //success!
         }
         else
         {
-            //printf("not-executable\n");
-            //Write buffer to file
-            FILE *fp;
-            fp = fopen(command, "a+");
-            if(fputs(buff, fp) >= 0)
-            {
-                //success!
-            }
-            else
-            {
-                //failure
-            }
-            clearbuff();
-            fclose(fp);
+            //failure
         }
+        clearbuff();
+        fclose(fp);
     }
 }
 

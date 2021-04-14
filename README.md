@@ -26,3 +26,9 @@ Built-in commands are now all interpreted in the same manner (excluding cd)
 General commands set as words so that ./ executables can be treated the same in general command layout.
   All command arguments will be written to add_argz() to be indexed with argzbin.
 New parsing architecture allows for commands/builtins with arguments to be understood with a metacharacter to separate.
+
+Replaced most of the print statements with output to the buffer. The buffer will print if not emptied by the end of the parsing.
+Otherwise buffer can be used when metacharacter is called.
+Determines whether command (ex. the fn in "ex > fn") is executable or not (important in decided whether to write to the file or use as input (unsure how to use as input))
+This logic (for the executable) is done within the command method
+

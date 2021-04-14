@@ -16,6 +16,7 @@ int yyparse();
 void shell_init() {
 	printf("Nutshell is initializing...\n");
 	aliasHead = NULL;
+	carry = 0;
 	varIndex = 0;
 	argbin = 0;
 	argzbin = 0;
@@ -28,7 +29,7 @@ void shell_init() {
 	strcpy(varTable.word[varIndex], homev);
 	varIndex++;
 	strcpy(varTable.var[varIndex], "PROMPT");
-	strcpy(varTable.word[varIndex], "Nutshell DEV 0.5");
+	strcpy(varTable.word[varIndex], "Nutshell DEV 0.4");
 	varIndex++;
     char* pathv = getenv("PATH");
 	strcpy(varTable.var[varIndex], "PATH");
@@ -83,10 +84,6 @@ void pushAlias(char* name, char* word) {
 			printf("Error, expansion of \"%s\" would create a loop.\n", name);
 			return;
 		}
-		else if((strcmp(current->word, name) == 0) && (strcmp(current->name, word) == 0)){
-			printf("Error, expansion of \"%s\" would create a loop.\n", name);
-			return;
-		}
 		else if(strcmp(current->name, name) == 0) {
 			strcpy(current->word, word);
 			return;
@@ -132,7 +129,7 @@ bool isAlias(char* name){
 
 void clearbuff()
 {
-	for(unsigned int i = 0; i < 1024; i++)
+	for(unsigned int i = 0; i < 2056; i++)
 	{
 		buff[i] = 0;
 	}
@@ -140,8 +137,11 @@ void clearbuff()
 
 int main() {
 	shell_init();
+	clearbuff();
 	while (1) {
         printPrompt();
 		yyparse();
+		printf("%s", buff);
+		clearbuff();
 	}
 }

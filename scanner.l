@@ -23,9 +23,9 @@ BUILTIN             alias|unalias|setenv|unsetenv|printenv
 
 bye                             { return BYE;   }
 cd                              { return CD; }
-{BUILTIN}                       { yylval.string = strdup(yytext); 
+{BUILTIN}                       {yylval.string = strdup(yytext); 
                                 return BUILTIN; }
-"\n"                            { return END;   }
+"\n"                            {return END;   }
 {WHITESPACE}+                   { /*ignore whitespace*/  }
 [\"]                            { BEGIN(string_condition); }
 {TILDE}                         { yylval.string = varTable.word[1];

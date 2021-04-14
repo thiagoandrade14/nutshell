@@ -140,6 +140,7 @@ int main() {
 	clearbuff();
 	while (1) {
         printPrompt();
+		clearbuff();
 		yyparse();
 		printf("%s", buff);
 		clearbuff();

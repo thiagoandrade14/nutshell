@@ -386,6 +386,15 @@ char** parsePATH() {
     }
     return pathArray;
 }
+int findVar(char* name) {
+    for (int i = 0; varTable.var[i] != NULL; i++) {
+        if (strcmp(varTable.var[i], name) == 0) {
+            return i;
+        }
+    }
+    printf("\n\nVariable %s not found. \n", name);
+    return -1;
+}
 
 void add_argzz(char* arg)
 {

@@ -19,9 +19,10 @@ int runCommand(char* command);
 extern char** environ;
 void builtins(char* built);
 char builtinargs[3][128];
-char* builtinargz[10];
+char* builtinargz[30];
 void add_arg(char* arg);
 void add_argz(char* arg);
+int findVar(char* name);
 void reverse(char** argz, int size);
 void met_gt();
 char** parsePATH();
@@ -30,11 +31,12 @@ char** parsePATH();
 %union {char *string;}
 
 %start cmd_line
-%token <string> BYE CD WORD HOME END METACHARACTER BUILTIN MET_GT
+%token <string> BYE CD WORD HOME END BUILTIN METACHARACTER ENV_VAR MET_GT
 
 %%
 cmd_line :
     CD WORD END         {runCD($2); return 1;}
+    |   CD ENV_VAR END  {runCD(varTable.word[findVar($2)]); return 1;}
     |   CD HOME END     {cdHome(); return 1;}
     |   CD END          {cdHome(); return 1;}
     |   BYE END         {exit(1); return 1;}
@@ -50,10 +52,12 @@ line :
 arg :
     %empty
     |   WORD arg        {add_arg($1);}
+    |   ENV_VAR arg     {add_argz(varTable.word[findVar($1)]); }
     ; 
 argz :
     %empty
     |   WORD argz        {add_argz($1);}
+    |   ENV_VAR argz     {add_argz(varTable.word[findVar($1)]); }
     ; 
 METACH :
     MET_GT  {met_gt();}
@@ -272,6 +276,7 @@ int runCommand(char* command) {
                 if (execve(binaryAddress, builtinargz, environ) < 0) {
                     printf("Error running %s.\n Program not found.\n", builtinargz[0]);
                 }
+                free(binaryAddress);
                 exit(0);
             }
         }
@@ -381,9 +386,18 @@ void reverse(char** argz, int size) {
 }
 void add_argz(char* arg)
 {
-    builtinargz[argzbin] = (char*) malloc(32*(sizeof(char)));
+    builtinargz[argzbin] = (char*) malloc(128*(sizeof(char)));
     strcpy(builtinargz[argzbin], arg);
     argzbin++;
+}
+int findVar(char* name) {
+    for (int i = 0; varTable.var[i] != NULL; i++) {
+        if (strcmp(varTable.var[i], name) == 0) {
+            return i;
+        }
+    }
+    printf("\n\nVariable %s not found. \n", name);
+    return -1;
 }
 void met_gt()
 {

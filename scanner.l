@@ -38,7 +38,7 @@ unalias                         { yylval.string = strdup(yytext);
 "${"                            { BEGIN(env_var_condition); }
 {TILDE}                         { yylval.string = varTable.word[1];
                                 return HOME;  }
-<alias_condition>{CHAR}+        {yylval.string = strdup(yytext);
+<alias_condition>{CHAR}+        {yylval.string = strdup(yytext); //prevents alias substitution if calling alias or unalias
                                 return WORD; }
 {CHAR}+                         { if(isAlias(yytext)) {
                                     char *yycopy = strdup( subAlias(yytext) );
@@ -46,12 +46,13 @@ unalias                         { yylval.string = strdup(yytext);
                                         unput( yycopy[i] );
                                     }
                                     free(yycopy);
+                                    BEGIN(alias_condition); //prevents further substitutions in the line.
                                 } 
                                 else {
                                     yylval.string = strdup(yytext);
                                     return WORD; }  }
                                     
-"2>&1"                            { return TWO_GT_AND_ONE; }
+"2>&1"                          { return TWO_GT_AND_ONE; }
 "2>"                            { return TWO_GT; }
 ">>"                            { return MET_GT_GT; }
 ">"                             { return MET_GT; }

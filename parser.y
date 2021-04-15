@@ -283,6 +283,7 @@ int runCommand(char* command) {
                 }
                 exit(0);
             }
+            argzbin = 0;
             return 1;
         }
         else { //parent process
@@ -300,6 +301,7 @@ int runCommand(char* command) {
     else
     {
         carry = 0;
+        argzbin = 0;
         //printf("not-executable\n");
         //Write buffer to file
         FILE *fp;

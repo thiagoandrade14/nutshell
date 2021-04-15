@@ -8,9 +8,9 @@
 %x string_condition env_var_condition
 %s alias_condition
 
-
 CHAR            [.A-Za-z0-9!\/_-][.:A-Za-z0-9!\/_-]*
 ANYCHAR            [)(*&%$#@!`;,\.a-zA-Z0-9'/_*~:= -][)(*&%$#@!`;,\.a-zA-Z0-9'/_*~= -]*
+=======
 TILDE               ~
 WHITESPACE          [ \t]+
 METACHARACTER       [|\&]+
@@ -51,6 +51,12 @@ unalias                         { yylval.string = strdup(yytext);
                                 else {
                                     yylval.string = strdup(yytext);
                                     return WORD; }  }
+                                    
+"2>&1"                            { return TWO_GT_AND_ONE; }
+"2>"                            { return TWO_GT; }
+">>"                            { return MET_GT_GT; }
 ">"                             { return MET_GT; }
+"<"                             { return MET_LT; }
+"|"                             { return MET_OR; }
 {METACHARACTER}                 { return METACHARACTER; }
 %%

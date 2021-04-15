@@ -44,8 +44,8 @@ cmd_line :
     |   CD END          {cdHome(); return 1;}
     |   BYE END         {exit(1); return 1;}
     |   END             {return 1;}
-    |   line END        {printf("line\n"); return 1;}
-    |   line MET_GT WORD END {printf("gt\n"); writecommand($3); return 1;} 
+    |   line END        { return 1;}
+    |   line MET_GT WORD END { writecommand($3); return 1;} 
     |   line MET_GT_GT WORD END {writecommand_e($3); return 1;}
     |   error END       {return 1;}
     ;

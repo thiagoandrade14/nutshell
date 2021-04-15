@@ -16,10 +16,10 @@ int yyparse();
 void shell_init() {
 	printf("Nutshell is initializing...\n");
 	aliasHead = NULL;
-	carry = 0;
 	varIndex = 0;
 	argbin = 0;
 	argzbin = 0;
+	argzzbin = 0;
 	getcwd(cwd, sizeof(cwd));
 	strcpy(varTable.var[varIndex], "PWD");
 	strcpy(varTable.word[varIndex], cwd);

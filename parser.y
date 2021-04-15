@@ -22,7 +22,6 @@ char* builtinargz[30];
 char* builtinargzz[10];
 void add_arg(char* arg);
 void add_argz(char* arg);
-int findVar(char* name);
 void reverse(char** argz, int size);
 char** parsePATH();
 void add_argzz(char* arg);
@@ -385,15 +384,6 @@ char** parsePATH() {
         }
     }
     return pathArray;
-}
-int findVar(char* name) {
-    for (int i = 0; varTable.var[i] != NULL; i++) {
-        if (strcmp(varTable.var[i], name) == 0) {
-            return i;
-        }
-    }
-    printf("\n\nVariable %s not found. \n", name);
-    return -1;
 }
 
 void add_argzz(char* arg)

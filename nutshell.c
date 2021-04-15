@@ -76,12 +76,26 @@ void printPrompt() {
 void pushAlias(char* name, char* word) {
 	struct aTable* current = aliasHead;
 	//first check for loops and for matching alias names...
+	char* curr = (char*) malloc(sizeof(word));
+	strcpy(curr, word);
+	while (isAlias(curr)) { 
+		curr = subAlias(curr);
+	}
+	if (strcmp(curr, name) == 0) {
+		printf("Error, expansion of \"%s\" would create a loop.\n", name);
+		return;
+	}
+	free(curr);
 	while (current != NULL) {
 		if(strcmp(name, word) == 0){
 			printf("Error, expansion of \"%s\" would create a loop.\n", name);
 			return;
 		}
 		else if((strcmp(current->name, name) == 0) && (strcmp(current->word, word) == 0)){
+			printf("Error, expansion of \"%s\" would create a loop.\n", name);
+			return;
+		}
+		else if((strcmp(current->word, name) == 0) && (strcmp(current->name, word) == 0)){
 			printf("Error, expansion of \"%s\" would create a loop.\n", name);
 			return;
 		}
@@ -160,6 +174,15 @@ bool isAlias(char* name){
         current = current->next;
     }
     return false;
+}
+int findVar(char* name) {
+    for (int i = 0; varTable.var[i] != NULL; i++) {
+        if (strcmp(varTable.var[i], name) == 0) {
+            return i;
+        }
+    }
+    printf("\n\nVariable %s not found. \n", name);
+    return -1;
 }
 
 void clearbuff()

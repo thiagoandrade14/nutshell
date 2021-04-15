@@ -29,7 +29,7 @@ void shell_init() {
 	strcpy(varTable.word[varIndex], homev);
 	varIndex++;
 	strcpy(varTable.var[varIndex], "PROMPT");
-	strcpy(varTable.word[varIndex], "Nutshell DEV 0.4");
+	strcpy(varTable.word[varIndex], "Nutshell DEV 0.5");
 	varIndex++;
     char* pathv = getenv("PATH");
 	strcpy(varTable.var[varIndex], "PATH");
@@ -43,7 +43,8 @@ void shell_init() {
 }
 //                                                                                         Print Prompt - Prints cwd
 /*
-* If the CWD is HOME, then display tilde character in the prompt instead
+* If the CWD is HOME or one of its subdirectories,
+then display tilde character in the prompt instead
 */
 void printPrompt() {
 	if (strcmp(varTable.word[0], varTable.word[1]) == 0) { //compare PWD and HOME
@@ -105,6 +106,40 @@ void pushAlias(char* name, char* word) {
 		}
 		current->next = newAlias;
 	}	
+}
+int runSetAlias(char* name, char* word) {
+	pushAlias (name, word);
+	return 1;
+}
+void displayAlias(){
+	struct aTable* current = aliasHead;
+	while (current != NULL) {
+        char iter[512];
+		sprintf(iter, "%s=%s\n", current->name, current->word);
+        strcat(buff, iter);
+		current = current->next;
+	}
+}
+int removeAlias(char* name) {
+	struct aTable* current = aliasHead;
+    struct aTable* previous = NULL;
+	if (current != NULL && strcmp(current->name, name) == 0) { //head is to be removed
+        aliasHead = current->next;
+        free(current);
+        return 1;
+    }
+	else {
+        while (current != NULL && strcmp(current->name, name) != 0) { //search for alias to be removed
+            previous = current;
+            current = current->next;
+        }
+        if (current == NULL) { //reached the end of the list without finding alias...
+            return 1;
+        }
+        previous->next = current->next;
+        free(current);
+        return 1;
+	}
 }
 char* subAlias(char* name) {
     struct aTable* current = aliasHead;

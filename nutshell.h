@@ -30,6 +30,9 @@ struct aTable {
 //function declarations
 void shell_init();
 void printPrompt();
+int runSetAlias(char* name, char* word);
+void displayAlias();
+int removeAlias(char* name);
 void pushAlias(char* name, char* word);
 char* subAlias(char* name);
 bool isAlias(char* name);

@@ -16,21 +16,27 @@ int setEnvVariable(char* variable, char* word);
 int unsetEnvVariable(char* variable);
 void displayEnv();
 int runCommand(char* command);
+int runCommands(char* command, char* command2);
+int runCommandin(char* command, char* file);
 extern char** environ;
 void builtins(char* built);
 char builtinargs[3][128];
 char* builtinargz[10];
+char* builtinargzz[10];
 void add_arg(char* arg);
 void add_argz(char* arg);
 void reverse(char** argz, int size);
-void met_gt();
 char** parsePATH();
+void add_argzz(char* arg);
+int writecommand(char* command);
+int writecommand_e(char* command);
+int writecommand_error(char* command, char* file);
 %}
 
 %union {char *string;}
 
 %start cmd_line
-%token <string> BYE CD WORD HOME END METACHARACTER BUILTIN MET_GT
+%token <string> BYE CD WORD HOME END METACHARACTER BUILTIN MET_GT MET_OR MET_LT MET_GT_GT TWO_GT_AND_ONE TWO_GT
 
 %%
 cmd_line :
@@ -40,12 +46,16 @@ cmd_line :
     |   BYE END         {exit(1); return 1;}
     |   END             {return 1;}
     |   line END        {return 1;}
-    |   line METACH cmd_line 
+    |   line MET_GT WORD END {writecommand($3); return 1;} 
+    |   line MET_GT_GT WORD END {writecommand_e($3); return 1;}
     |   error END       {return 1;}
     ;
 line :
     BUILTIN arg         {builtins($1);}
     |   WORD argz       {add_argz($1); runCommand($1);}
+    |   line_MET_OR
+    |   line_MET_LT
+    |   line_TWO_GT
     ;
 arg :
     %empty
@@ -55,8 +65,17 @@ argz :
     %empty
     |   WORD argz        {add_argz($1);}
     ; 
-METACH :
-    MET_GT  {met_gt();}
+argzz :
+    %empty
+    |   WORD argzz      {add_argzz($1);}
+line_MET_OR :
+    WORD argz MET_OR WORD argzz   {add_argz($1); add_argzz($4); runCommands($1, $4);}
+    ;
+line_MET_LT :
+    WORD argz MET_LT WORD   {add_argz($1); runCommandin($1, $4);}
+    ;
+line_TWO_GT :
+    WORD argz TWO_GT WORD { add_argz($1); writecommand_error($1, $3);}
     ;
 %%
 void yyerror(char *s) {
@@ -250,8 +269,6 @@ void displayEnv()
     }
 }
 int runCommand(char* command) {
-    if(carry == 0)
-    {
         int pipefd[2];
         pipe(pipefd);
 
@@ -297,26 +314,6 @@ int runCommand(char* command) {
             argzbin = 0;
             return 1;
         }
-    }
-    else
-    {
-        carry = 0;
-        argzbin = 0;
-        //printf("not-executable\n");
-        //Write buffer to file
-        FILE *fp;
-        fp = fopen(command, "a+");
-        if(fputs(buff, fp) >= 0)
-        {
-            //success!
-        }
-        else
-        {
-            //failure
-        }
-        clearbuff();
-        fclose(fp);
-    }
 }
 
 void builtins(char* built)
@@ -404,10 +401,7 @@ void add_argz(char* arg)
     strcpy(builtinargz[argzbin], arg);
     argzbin++;
 }
-void met_gt()
-{
-    carry = 1;
-}
+
 char** parsePATH() {
     char* newPATH = varTable.word[3];
     int i;
@@ -433,4 +427,247 @@ char** parsePATH() {
         }
     }
     return pathArray;
+}
+
+void add_argzz(char* arg)
+{
+    builtinargzz[argzzbin] = (char*) malloc(32*(sizeof(char)));
+    strcpy(builtinargzz[argzzbin], arg);
+    argzzbin++;
+}
+
+int runCommands(char* command, char* command2) 
+{
+    int pipefd[2];
+    pipe(pipefd);
+    int pipefk[2];
+    pipe(pipefk);
+
+    reverse(builtinargz, argzbin);
+    reverse(builtinargzz, argzzbin);
+    char* binaryAddress = (char*) malloc(128*sizeof(char));
+    pid_t pid = fork();
+    if (pid == -1) {
+        printf("\nFork failed.\n");
+    }
+    else if (pid == 0) { //child process
+        char** current = parsePATH();       //parse PATH variable into an array of strings.
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[0]);
+        close(pipefk[0]);
+        close(pipefk[1]);
+        //builds the entire path of the executable, trying the
+        //directories found in the PATH variable
+        for (int i = 0; current[i] != NULL; i++) {
+            strcpy(binaryAddress, current[i]);
+            strcat(binaryAddress, "/");
+            strcat(binaryAddress, builtinargz[0]);
+            if (access(binaryAddress, F_OK) == 0) { //checks if the executable was found, then breaks the loop
+                break;
+            }
+        }
+        if (execve(binaryAddress, builtinargz, environ) < 0) {
+            if (execve(binaryAddress, builtinargz, environ) < 0) {
+                printf("Error running %s.\n Program not found.\n", builtinargz[0]);
+            }
+            exit(0);
+        }
+        argzbin = 0;
+        argzzbin = 0;
+        return 1;
+    }
+    else { //parent process
+
+        pid_t pid2 = fork();
+        if(pid2 == -1)
+        {
+            printf("Fork failed\n");
+        }
+        if(pid2 == 0)
+        {
+            char** current = parsePATH();       //parse PATH variable into an array of strings.
+
+            dup2(pipefd[0], STDIN_FILENO);
+            dup2(pipefk[1], STDOUT_FILENO);
+            close(pipefd[1]);
+            close(pipefk[0]);
+
+            //builds the entire path of the executable, trying the
+            //directories found in the PATH variable
+            for (int i = 0; current[i] != NULL; i++) {
+                strcpy(binaryAddress, current[i]);
+                strcat(binaryAddress, "/");
+                strcat(binaryAddress, builtinargzz[0]);
+                if (access(binaryAddress, F_OK) == 0) { //checks if the executable was found, then breaks the loop
+                    break;
+                }
+            }
+            if (execve(binaryAddress, builtinargzz, environ) < 0) {
+                if (execve(binaryAddress, builtinargzz, environ) < 0) {
+                    printf("Error running %s.\n Program not found.\n", builtinargzz[0]);
+                }
+                exit(0);
+            }
+            argzbin = 0;
+            argzzbin = 0;
+            return 1;
+        }
+        else
+        {
+            wait(NULL);
+            close(pipefk[1]);
+            close(pipefd[1]);
+            close(pipefd[0]);
+            while(read(pipefk[0], buff, sizeof(buff)) != 0);
+            close(pipefk[0]);
+            argzbin = 0;
+            argzzbin = 0;
+            return 1;
+        }
+    }
+}
+
+int writecommand(char* command)
+{
+    argzbin = 0;
+    //printf("not-executable\n");
+    //Write buffer to file
+    FILE *fp;
+    fp = fopen(command, "w");
+    if(fputs(buff, fp) >= 0)
+    {
+        //success!
+    }
+    else
+    {
+        //failure
+    }
+    clearbuff();
+    fclose(fp);
+}
+
+int writecommand_e(char* command)
+{
+    argzbin = 0;
+    //printf("not-executable\n");
+    //Write buffer to file
+    FILE *fp;
+    fp = fopen(command, "a+");
+    if(fputs(buff, fp) >= 0)
+    {
+        //success!
+    }
+    else
+    {
+        //failure
+    }
+    clearbuff();
+    fclose(fp);
+}
+
+int runCommandin(char* command, char* file)
+{
+    int pipefd[2];
+    pipe(pipefd);
+    reverse(builtinargz, argzbin);
+    char* binaryAddress = (char*) malloc(128*sizeof(char));
+    pid_t pid = fork();
+    if(pid == -1)
+    {
+        printf("\nFork failed.\n");
+    }
+    else if(pid == 0) //child process
+    {
+        char** current = parsePATH();
+        FILE *fp;
+        fp = fopen(file, "a+");
+        dup2(fileno(fp), STDIN_FILENO);
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[0]);
+        for (int i = 0; current[i] != NULL; i++) {
+            strcpy(binaryAddress, current[i]);
+            strcat(binaryAddress, "/");
+            strcat(binaryAddress, builtinargz[0]);
+            if (access(binaryAddress, F_OK) == 0) { //checks if the executable was found, then breaks the loop
+                break;
+            }
+        }
+        if (execve(binaryAddress, builtinargz, environ) < 0) {
+            if (execve(binaryAddress, builtinargz, environ) < 0) {
+                printf("Error running %s.\n Program not found.\n", builtinargz[0]);
+            }
+            exit(0);
+        }
+        argzbin = 0;
+        return 1;
+    }
+    else //parent process
+    {
+        wait(NULL);
+        close(pipefd[1]);
+        while(read(pipefd[0], buff, sizeof(buff)) != 0);
+        close(pipefd[0]);
+        argzbin = 0;
+        return 1;
+    }
+}
+
+int writecommand_error(char* command, char* file)
+{
+    int pipefd[2];
+    pipe(pipefd);
+    reverse(builtinargz, argzbin);
+    char* binaryAddress = (char*) malloc(128*sizeof(char));
+    pid_t pid = fork();
+    if(pid == -1)
+    {
+        printf("\nFork failed\n");
+    }
+    else if(pid == 0)
+    {
+        char** current = parsePATH();
+        close(pipefd[0]);
+        dup2(pipefd[1], 2);
+        close(pipefd[1]);
+        for (int i = 0; current[i] != NULL; i++) {
+            strcpy(binaryAddress, current[i]);
+            strcat(binaryAddress, "/");
+            strcat(binaryAddress, builtinargz[0]);
+            if (access(binaryAddress, F_OK) == 0) { //checks if the executable was found, then breaks the loop
+                break;
+            }
+        }
+        if (execve(binaryAddress, builtinargz, environ) < 0) {
+            if (execve(binaryAddress, builtinargz, environ) < 0) {
+                printf("Error running %s.\n Program not found.\n", builtinargz[0]);
+            }
+            exit(0);
+        }
+        argzbin = 0;
+        return 1;
+    }
+    else
+    {
+        wait(NULL);
+        for (int i = 0; builtinargz[i] != NULL; i++) {
+            free(builtinargz[i]);
+            builtinargz[i] = NULL;
+        }
+        close(pipefd[1]);
+        while(read(pipefd[0], buff, sizeof(buff)) != 0);
+        FILE *fp;
+        fp = fopen(file, "w");
+        if(fputs(buff, fp) >= 0)
+        {
+            //success!
+        }
+        else
+        {
+            //failure
+        }
+        clearbuff();
+        fclose(fp);
+        argzbin = 0;
+        return 1;
+    }
 }

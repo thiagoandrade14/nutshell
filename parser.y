@@ -34,7 +34,6 @@ int writecommand_error(char* command, char* file);
 %}
 
 %union {char *string;}
-
 %start cmd_line
 %token <string> BYE CD WORD HOME END METACHARACTER BUILTIN MET_GT MET_OR MET_LT MET_GT_GT TWO_GT_AND_ONE TWO_GT
 
@@ -45,17 +44,15 @@ cmd_line :
     |   CD END          {cdHome(); return 1;}
     |   BYE END         {exit(1); return 1;}
     |   END             {return 1;}
-    |   line END        {return 1;}
-    |   line MET_GT WORD END {writecommand($3); return 1;} 
+    |   line END        {printf("line\n"); return 1;}
+    |   line MET_GT WORD END {printf("gt\n"); writecommand($3); return 1;} 
     |   line MET_GT_GT WORD END {writecommand_e($3); return 1;}
     |   error END       {return 1;}
     ;
 line :
     BUILTIN arg         {builtins($1);}
     |   WORD argz       {add_argz($1); runCommand($1);}
-    |   line_MET_OR
-    |   line_MET_LT
-    |   line_TWO_GT
+    |   line_MET
     ;
 arg :
     %empty
@@ -68,14 +65,11 @@ argz :
 argzz :
     %empty
     |   WORD argzz      {add_argzz($1);}
-line_MET_OR :
-    WORD argz MET_OR WORD argzz   {add_argz($1); add_argzz($4); runCommands($1, $4);}
-    ;
-line_MET_LT :
-    WORD argz MET_LT WORD   {add_argz($1); runCommandin($1, $4);}
-    ;
-line_TWO_GT :
-    WORD argz TWO_GT WORD { add_argz($1); writecommand_error($1, $3);}
+line_MET :
+    WORD argz TWO_GT WORD { add_argz($1); writecommand_error($1, $4);}
+//    |   WORD argz MET_GT WORD TWO_GT_AND_ONE { add_argz($1); writecommand_error($1, $4);} //Functions, but gives shift/reduce conflict
+    |   WORD argz MET_OR WORD argzz   {add_argz($1); add_argzz($4); runCommands($1, $4);}
+    |   WORD argz MET_LT WORD   {add_argz($1); runCommandin($1, $4);}
     ;
 %%
 void yyerror(char *s) {
@@ -282,7 +276,7 @@ int runCommand(char* command) {
             char** current = parsePATH();       //parse PATH variable into an array of strings.
             close(pipefd[0]);
             dup2(pipefd[1], 1);
-            dup2(pipefd[1], 2);
+            //dup2(pipefd[1], 2);
             close(pipefd[1]);
             //builds the entire path of the executable, trying the
             //directories found in the PATH variable
@@ -627,7 +621,7 @@ int writecommand_error(char* command, char* file)
     {
         char** current = parsePATH();
         close(pipefd[0]);
-        dup2(pipefd[1], 2);
+        dup2(pipefd[1], STDERR_FILENO);
         close(pipefd[1]);
         for (int i = 0; current[i] != NULL; i++) {
             strcpy(binaryAddress, current[i]);
@@ -649,10 +643,6 @@ int writecommand_error(char* command, char* file)
     else
     {
         wait(NULL);
-        for (int i = 0; builtinargz[i] != NULL; i++) {
-            free(builtinargz[i]);
-            builtinargz[i] = NULL;
-        }
         close(pipefd[1]);
         while(read(pipefd[0], buff, sizeof(buff)) != 0);
         FILE *fp;

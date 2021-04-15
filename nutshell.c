@@ -111,6 +111,40 @@ void pushAlias(char* name, char* word) {
 		current->next = newAlias;
 	}	
 }
+int runSetAlias(char* name, char* word) {
+	pushAlias (name, word);
+	return 1;
+}
+void displayAlias(){
+	struct aTable* current = aliasHead;
+	while (current != NULL) {
+        char iter[512];
+		sprintf(iter, "%s=%s\n", current->name, current->word);
+        strcat(buff, iter);
+		current = current->next;
+	}
+}
+int removeAlias(char* name) {
+	struct aTable* current = aliasHead;
+    struct aTable* previous = NULL;
+	if (current != NULL && strcmp(current->name, name) == 0) { //head is to be removed
+        aliasHead = current->next;
+        free(current);
+        return 1;
+    }
+	else {
+        while (current != NULL && strcmp(current->name, name) != 0) { //search for alias to be removed
+            previous = current;
+            current = current->next;
+        }
+        if (current == NULL) { //reached the end of the list without finding alias...
+            return 1;
+        }
+        previous->next = current->next;
+        free(current);
+        return 1;
+	}
+}
 char* subAlias(char* name) {
     struct aTable* current = aliasHead;
     while (current != NULL) {

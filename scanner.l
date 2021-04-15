@@ -5,9 +5,8 @@
 %}
 
 %option noyywrap
-%x string_condition
-%x env_var_condition
-%x unalias_condition
+%x string_condition env_var_condition
+%s alias_condition
 
 
 CHAR            [.A-Za-z0-9!\/_-][.:A-Za-z0-9!\/_-]*
@@ -15,22 +14,24 @@ ANYCHAR            [)(*&%$#@!`;,\.a-zA-Z0-9'/_*~:= -][)(*&%$#@!`;,\.a-zA-Z0-9'/_
 TILDE               ~
 WHITESPACE          [ \t]+
 METACHARACTER       [|\&]+
-BUILTIN             alias|setenv|unsetenv|printenv
+BUILTIN             setenv|unsetenv|printenv
 
 %%
-<string_condition>{ANYCHAR}+    { yylval.string = strdup(yytext); return WORD;}
-<string_condition>[\"]          {BEGIN(INITIAL);}
-<env_var_condition>{ANYCHAR}+      { yylval.string = strdup(yytext); return ENV_VAR;}
-<env_var_condition>[}]             {BEGIN(INITIAL);}
-<unalias_condition>{CHAR}+      { yylval.string = strdup(yytext); return UNALIAS;}
-<unalias_condition>[\n]             {BEGIN(INITIAL);}
+<string_condition>{ANYCHAR}+            { yylval.string = strdup(yytext); return WORD;}
+<string_condition>[\"]                  {BEGIN(INITIAL);}
+<env_var_condition>{ANYCHAR}+           { yylval.string = strdup(yytext); return ENV_VAR;}
+<env_var_condition>[}]                  {BEGIN(INITIAL);}
+<alias_condition>"\n"                   {BEGIN(INITIAL); return END;}
 
-
-bye                             { return BYE;   }
+bye                             { return BYE; }
 cd                              { return CD; }
 {WHITESPACE}+                   { /*ignore whitespace*/  }
+alias                           {BEGIN(alias_condition); 
+                                yylval.string = strdup(yytext);
+                                return BUILTIN;}
 unalias                         { yylval.string = strdup(yytext);
-                                BEGIN(unalias_condition);}
+                                BEGIN(alias_condition);
+                                return BUILTIN;}
 {BUILTIN}                       {yylval.string = strdup(yytext); 
                                 return BUILTIN; }
 "\n"                            {return END; }
@@ -38,15 +39,18 @@ unalias                         { yylval.string = strdup(yytext);
 "${"                            { BEGIN(env_var_condition); }
 {TILDE}                         { yylval.string = varTable.word[1];
                                 return HOME;  }
+<alias_condition>{CHAR}+        {yylval.string = strdup(yytext);
+                                return WORD; }
 {CHAR}+                         { if(isAlias(yytext)) {
                                     char *yycopy = strdup( subAlias(yytext) );
-                                    for ( int i = strlen(subAlias(yytext)) - 1; i >= 0; --i )
+                                    for (int i = strlen(subAlias(yytext)) - 1; i >= 0; --i) {
                                         unput( yycopy[i] );
-                                    free( yycopy );
-                                } else {
-                                yylval.string = strdup(yytext);
-                                return WORD; }
-                                }
+                                    }
+                                    free(yycopy);
+                                } 
+                                else {
+                                    yylval.string = strdup(yytext);
+                                    return WORD; }  }
 ">"                             { return MET_GT; }
 {METACHARACTER}                 { return METACHARACTER; }
 %%

@@ -9,9 +9,6 @@ int yylex(void);
 void yyerror(char *s);
 int cdHome(void);
 int runCD(char* arg);
-int runSetAlias(char* name, char* word);
-void displayAlias();
-int removeAlias(char* name);
 int setEnvVariable(char* variable, char* word);
 int unsetEnvVariable(char* variable);
 void displayEnv();
@@ -31,7 +28,7 @@ char** parsePATH();
 %union {char *string;}
 
 %start cmd_line
-%token <string> BYE CD WORD HOME END BUILTIN METACHARACTER ENV_VAR UNALIAS MET_GT
+%token <string> BYE CD WORD HOME END BUILTIN METACHARACTER ENV_VAR MET_GT
 
 %%
 cmd_line :
@@ -40,7 +37,6 @@ cmd_line :
     |   CD HOME END     {cdHome(); return 1;}
     |   CD END          {cdHome(); return 1;}
     |   BYE END         {exit(1); return 1;}
-    |   UNALIAS         {removeAlias($1); return 1;}
     |   END             {return 1;}
     |   line END        {return 1;}
     |   line METACH cmd_line 
@@ -114,40 +110,6 @@ int runCD(char* arg) {
             strcat(buff, iter);
                 return 1;
 		}
-	}
-}
-int runSetAlias(char* name, char* word) {
-	pushAlias (name, word);
-	return 1;
-}
-void displayAlias(){
-	struct aTable* current = aliasHead;
-	while (current != NULL) {
-        char iter[512];
-		sprintf(iter, "%s=%s\n", current->name, current->word);
-        strcat(buff, iter);
-		current = current->next;
-	}
-}
-int removeAlias(char* name) {
-	struct aTable* current = aliasHead;
-    struct aTable* previous = NULL;
-	if (current != NULL && strcmp(current->name, name) == 0) { //head is to be removed
-        aliasHead = current->next;
-        free(current);
-        return 1;
-    }
-	else {
-        while (current != NULL && strcmp(current->name, name) != 0) { //search for alias to be removed
-            previous = current;
-            current = current->next;
-        }
-        if (current == NULL) { //reached the end of the list without finding alias...
-            return 1;
-        }
-        previous->next = current->next;
-        free(current);
-        return 1;
 	}
 }
 int setEnvVariable(char* variable, char* word)
@@ -272,7 +234,7 @@ int runCommand(char* command) {
             }
             if (execve(binaryAddress, builtinargz, environ) < 0) {
                 if (execve(binaryAddress, builtinargz, environ) < 0) {
-                    printf("Error running %s.\n Program not found.\n", builtinargz[0]);
+                    printf("Error running %s.\nProgram not found.\n", builtinargz[0]);
                 }
                 free(binaryAddress);
                 exit(0);

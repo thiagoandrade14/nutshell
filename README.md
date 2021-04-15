@@ -1,5 +1,29 @@
 # nutshell
-Version: 0.5 (April 13th, 2021)
+Version: 0.8 (April 15th, 2021)
+Thiago de Andrade (UFID 0767-6652)
+Hailee Bacon (UFID xxxx-xxxx)
+
+## Work division ##
+Thiago: 
+- Initial syntax (parser rules).
+- Most of the lexer rules.
+- Built-in commands: cd, alias, unalias
+- Initial implementation of non built-in commands
+- Environment variable expansion
+- Wildcard expansion (pending)
+
+Hailee:
+- Expanded and reorganized most of the parser syntax rules
+- Several lexer rules, particularly with metacharacters (> < |, etc.)
+- Built-in commands: setenv, unsetenv, printenv
+- Expanded non-built in functions to support both I/O redirection (i. e. writing to files) and piping
+-  2>file and 2>&1 expansion
+
+## Not implemented features ##
+File name completion
+
+## Implemented features ##
+The other features are implemented to some extent.
 
 ## Installation ##
 Run "make" command in the main directory. Then run executable file named "shell".

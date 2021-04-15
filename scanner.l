@@ -7,7 +7,6 @@
 %option noyywrap
 %x string_condition
 
-
 CHAR            [.A-Za-z0-9!\/_-][.A-Za-z0-9!\/_-]*
 ANYCHAR            [)(*&%$#@!`;,\.a-zA-Z0-9'/_*= -][)(*&%$#@!`;,\.a-zA-Z0-9'/_*= -]*
 TILDE               ~
@@ -30,8 +29,8 @@ cd                              { return CD; }
 [\"]                            { BEGIN(string_condition); }
 {TILDE}                         { yylval.string = varTable.word[1];
                                 return HOME;  }
-"2>&1"                          { return TWO_GT_AND_ONE; }
-"2>"                           { return TWO_GT; }
+"2>&1"                            { return TWO_GT_AND_ONE; }
+"2>"                            { return TWO_GT; }
 {CHAR}+                         { yylval.string = strdup(yytext);
                                 return WORD; 
                                 }

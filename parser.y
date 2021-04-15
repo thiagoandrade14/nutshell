@@ -31,7 +31,7 @@ char** parsePATH();
 %union {char *string;}
 
 %start cmd_line
-%token <string> BYE CD WORD HOME END BUILTIN METACHARACTER ENV_VAR MET_GT
+%token <string> BYE CD WORD HOME END BUILTIN METACHARACTER ENV_VAR UNALIAS MET_GT
 
 %%
 cmd_line :
@@ -40,6 +40,7 @@ cmd_line :
     |   CD HOME END     {cdHome(); return 1;}
     |   CD END          {cdHome(); return 1;}
     |   BYE END         {exit(1); return 1;}
+    |   UNALIAS         {removeAlias($1); return 1;}
     |   END             {return 1;}
     |   line END        {return 1;}
     |   line METACH cmd_line 
@@ -129,27 +130,24 @@ void displayAlias(){
 	}
 }
 int removeAlias(char* name) {
-	if (aliasHead != NULL) {
-		if (strcmp(aliasHead->name, name) == 0) {
-			if (aliasHead->next != NULL) {
-				struct aTable* temp = aliasHead;
-				aliasHead = aliasHead->next;
-				free(temp);
-			}
-			else {
-				free(aliasHead);
-				aliasHead = NULL;
-			}
-		}
-		struct aTable* current = aliasHead;
-		while (current != NULL && current->next != NULL) {
-			if (strcmp(current->next->name, name) == 0) {
-				struct aTable* temp = current->next->next;
-				free(current->next);
-				current->next = temp;
-			}
-			current = current->next;
-		}
+	struct aTable* current = aliasHead;
+    struct aTable* previous = NULL;
+	if (current != NULL && strcmp(current->name, name) == 0) { //head is to be removed
+        aliasHead = current->next;
+        free(current);
+        return 1;
+    }
+	else {
+        while (current != NULL && strcmp(current->name, name) != 0) { //search for alias to be removed
+            previous = current;
+            current = current->next;
+        }
+        if (current == NULL) { //reached the end of the list without finding alias...
+            return 1;
+        }
+        previous->next = current->next;
+        free(current);
+        return 1;
 	}
 }
 int setEnvVariable(char* variable, char* word)

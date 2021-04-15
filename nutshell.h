@@ -41,7 +41,7 @@ struct aTable* aliasHead;
 int varIndex;
 int argbin;
 int argzbin;
+int argzzbin;
 char cwd[1024];
-char buff[2056];
-int carry;
+char buff[4096];
 #endif

@@ -32,3 +32,5 @@ Otherwise buffer can be used when metacharacter is called.
 Determines whether command (ex. the fn in "ex > fn") is executable or not (important in decided whether to write to the file or use as input (unsure how to use as input))
 This logic (for the executable) is done within the command method
 
+Finished > operator, >> operator, and < operator. Partial completed | operator (only 2 operands)
+Also in progress: 2>&1 and 2> operators

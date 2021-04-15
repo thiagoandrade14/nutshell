@@ -7,7 +7,6 @@
 %option noyywrap
 %x string_condition
 
-
 CHAR            [.A-Za-z0-9!\/_-][.A-Za-z0-9!\/_-]*
 ANYCHAR            [)(*&%$#@!`;,\.a-zA-Z0-9'/_*= -][)(*&%$#@!`;,\.a-zA-Z0-9'/_*= -]*
 TILDE               ~
@@ -30,16 +29,15 @@ cd                              { return CD; }
 [\"]                            { BEGIN(string_condition); }
 {TILDE}                         { yylval.string = varTable.word[1];
                                 return HOME;  }
-
-{CHAR}+                         { if(isAlias(yytext)) {
-                                    char *yycopy = strdup( subAlias(yytext) );
-                                    for ( int i = strlen(subAlias(yytext)) - 1; i >= 0; --i )
-                                        unput( yycopy[i] );
-                                    free( yycopy );
-                                } else {
-                                yylval.string = strdup(yytext);
-                                return WORD; }
+"2>&1"                            { return TWO_GT_AND_ONE; }
+"2>"                            { return TWO_GT; }
+{CHAR}+                         { yylval.string = strdup(yytext);
+                                return WORD; 
                                 }
+
+">>"                            { return MET_GT_GT; }
 ">"                             { return MET_GT; }
+"<"                             { return MET_LT; }
+"|"                             { return MET_OR; }
 {METACHARACTER}                 { return METACHARACTER; }
 %%

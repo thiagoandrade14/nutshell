@@ -30,10 +30,15 @@ cd                              { return CD; }
 [\"]                            { BEGIN(string_condition); }
 {TILDE}                         { yylval.string = varTable.word[1];
                                 return HOME;  }
-
+"2>&1"                          { return TWO_GT_AND_ONE; }
+"2>"                           { return TWO_GT; }
 {CHAR}+                         { yylval.string = strdup(yytext);
                                 return WORD; 
                                 }
+
+">>"                            { return MET_GT_GT; }
 ">"                             { return MET_GT; }
+"<"                             { return MET_LT; }
+"|"                             { return MET_OR; }
 {METACHARACTER}                 { return METACHARACTER; }
 %%

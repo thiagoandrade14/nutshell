@@ -40,6 +40,7 @@ void pushAlias(char* name, char* word);
 char* subAlias(char* name);
 bool isAlias(char* name);
 void clearbuff();
+int findVar(char* name);
 
 //globals
 struct evTable varTable;

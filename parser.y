@@ -33,7 +33,9 @@ int writecommand_error(char* command, char* file);
 
 %union {char *string;}
 %start cmd_line
+
 %token <string> BYE CD WORD HOME END METACHARACTER BUILTIN ENV_VAR MET_GT MET_OR MET_LT MET_GT_GT TWO_GT_AND_ONE TWO_GT AND BAD
+
 
 %%
 cmd_line :
@@ -164,8 +166,10 @@ int unsetEnvVariable(char* variable)
 {
 	if(!strcmp("HOME", variable))
     {
-        char* homev = getenv("HOME");
-    	strcpy(varTable.word[1], homev);
+        char iter[256];
+        sprintf(iter, "Cannot unset HOME. \n");
+        strcat(buff, iter);
+        return 1;
     }
     else if(!strcmp("USER", variable))
     {
@@ -174,8 +178,10 @@ int unsetEnvVariable(char* variable)
     }
     else if(!strcmp("PATH", variable))
     {
-        char* pathv = getenv("PATH");
-	    strcpy(varTable.word[3], pathv);
+        char iter[256];
+        sprintf(iter, "Cannot unset PATH. \n");
+        strcat(buff, iter);
+        return 1;
     }
     else if(!strcmp("PWD", variable))
     {
@@ -280,12 +286,10 @@ int runCommand(char* command) {
             if(glob_usable == 0)
             {
                 if (execve(binaryAddress, builtinargz, environ) < 0) {
-                    if (execve(binaryAddress, builtinargz, environ) < 0) {
-                        printf("Error running %s.\nProgram not found.\n", builtinargz[0]);
-                    }
-                    free(binaryAddress);
-                    exit(0);
+                    printf("Error running %s.\nProgram not found.\n", builtinargz[0]);
                 }
+                free(binaryAddress);
+                exit(0);
             }
             /*
             else

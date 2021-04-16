@@ -20,6 +20,7 @@ void shell_init() {
 	argbin = 0;
 	argzbin = 0;
 	argzzbin = 0;
+	mainpid = getpid();
 	getcwd(cwd, sizeof(cwd));
 	strcpy(varTable.var[varIndex], "PWD");
 	strcpy(varTable.word[varIndex], cwd);
@@ -220,10 +221,13 @@ int main() {
 	shell_init();
 	clearbuff();
 	while (1) {
+		if(getpid() == mainpid)
+		{
         printPrompt();
 		clearbuff();
 		yyparse();
 		printf("%s", buff);
 		clearbuff();
+		}
 	}
 }

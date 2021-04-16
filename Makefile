@@ -9,7 +9,7 @@ flex-config:
 	flex scanner.l
 
 shell:
-	$(CC) nutshell.c parser.tab.c lex.yy.c -o shell
+	$(CC) nutshell.c parser.tab.c lex.yy.c -o nutshell
 
 clean:
-	rm parser.tab.c parser.tab.h lex.yy.c shell
+	rm parser.tab.c parser.tab.h lex.yy.c nutshell

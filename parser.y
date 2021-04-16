@@ -157,8 +157,10 @@ int unsetEnvVariable(char* variable)
 {
 	if(!strcmp("HOME", variable))
     {
-        char* homev = getenv("HOME");
-    	strcpy(varTable.word[1], homev);
+        char iter[256];
+        sprintf(iter, "Cannot unset HOME. \n");
+        strcat(buff, iter);
+        return 1;
     }
     else if(!strcmp("USER", variable))
     {
@@ -167,8 +169,10 @@ int unsetEnvVariable(char* variable)
     }
     else if(!strcmp("PATH", variable))
     {
-        char* pathv = getenv("PATH");
-	    strcpy(varTable.word[3], pathv);
+        char iter[256];
+        sprintf(iter, "Cannot unset PATH. \n");
+        strcat(buff, iter);
+        return 1;
     }
     else if(!strcmp("PWD", variable))
     {

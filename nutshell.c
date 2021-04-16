@@ -75,37 +75,57 @@ void printPrompt() {
 
 void pushAlias(char* name, char* word) {
 	struct aTable* current = aliasHead;
-	//first check for loops and for matching alias names...
+	char* oldWord = (char*) malloc(sizeof(word));
+	bool removedFromList = false;
+	//to improve circular loop detection, first check
+	//check if alias name exists and remove it from the list
+	while (current != NULL) {
+		if (strcmp(current->name, name) == 0) {
+			oldWord = current->word;
+			removeAlias(current->name);
+			removedFromList = true;
+		}
+		current = current->next;
+	}
+	//Now detect possible infinite loops
+	current = aliasHead;
 	char* curr = (char*) malloc(sizeof(word));
 	strcpy(curr, word);
-	while (isAlias(curr)) { 
+	while (isAlias(curr)) {
 		curr = subAlias(curr);
 	}
 	if (strcmp(curr, name) == 0) {
 		printf("Error, expansion of \"%s\" would create a loop.\n", name);
+		if (removedFromList) {
+			pushAlias(name, oldWord);
+		}
 		return;
 	}
-	free(curr);
 	while (current != NULL) {
 		if(strcmp(name, word) == 0){
 			printf("Error, expansion of \"%s\" would create a loop.\n", name);
+			if (removedFromList) {
+				pushAlias(name, oldWord);
+			}
 			return;
 		}
 		else if((strcmp(current->name, name) == 0) && (strcmp(current->word, word) == 0)){
 			printf("Error, expansion of \"%s\" would create a loop.\n", name);
+			if (removedFromList) {
+				pushAlias(name, oldWord);
+			}
 			return;
 		}
 		else if((strcmp(current->word, name) == 0) && (strcmp(current->name, word) == 0)){
 			printf("Error, expansion of \"%s\" would create a loop.\n", name);
-			return;
-		}
-		else if(strcmp(current->name, name) == 0) {
-			strcpy(current->word, word);
+			if (removedFromList) {
+				pushAlias(name, oldWord);
+			}
 			return;
 		}
 		current = current->next;
 	}
-	//if no matching name was found, allocate and create new alias name and word
+	//if no infinite loop or matching name was found, allocate and create new alias name and word
 	struct aTable* newAlias = (struct aTable*)malloc(sizeof(struct aTable));
 	strcpy(newAlias->name, name);
 	strcpy(newAlias->word, word);
@@ -121,10 +141,12 @@ void pushAlias(char* name, char* word) {
 		current->next = newAlias;
 	}	
 }
+
 int runSetAlias(char* name, char* word) {
 	pushAlias (name, word);
 	return 1;
 }
+
 void displayAlias(){
 	struct aTable* current = aliasHead;
 	while (current != NULL) {
@@ -134,6 +156,7 @@ void displayAlias(){
 		current = current->next;
 	}
 }
+
 int removeAlias(char* name) {
 	struct aTable* current = aliasHead;
     struct aTable* previous = NULL;

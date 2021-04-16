@@ -9,9 +9,6 @@ int yylex(void);
 void yyerror(char *s);
 int cdHome(void);
 int runCD(char* arg);
-int runSetAlias(char* name, char* word);
-void displayAlias();
-int removeAlias(char* name);
 int setEnvVariable(char* variable, char* word);
 int unsetEnvVariable(char* variable);
 void displayEnv();
@@ -21,10 +18,11 @@ int runCommandin(char* command, char* file);
 extern char** environ;
 void builtins(char* built);
 char builtinargs[3][128];
-char* builtinargz[10];
+char* builtinargz[30];
 char* builtinargzz[10];
 void add_arg(char* arg);
 void add_argz(char* arg);
+int findVar(char* name);
 void reverse(char** argz, int size);
 char** parsePATH();
 void add_argzz(char* arg);
@@ -35,16 +33,18 @@ int writecommand_error(char* command, char* file);
 
 %union {char *string;}
 %start cmd_line
-%token <string> BYE CD WORD HOME END METACHARACTER BUILTIN MET_GT MET_OR MET_LT MET_GT_GT TWO_GT_AND_ONE TWO_GT
+%token <string> BYE CD WORD HOME END METACHARACTER BUILTIN ENV_VAR MET_GT MET_OR MET_LT MET_GT_GT TWO_GT_AND_ONE TWO_GT AND BAD
 
 %%
 cmd_line :
     CD WORD END         {runCD($2); return 1;}
+    |   CD ENV_VAR END  {runCD(varTable.word[findVar($2)]); return 1;}
     |   CD HOME END     {cdHome(); return 1;}
     |   CD END          {cdHome(); return 1;}
     |   BYE END         {exit(1); return 1;}
     |   END             {return 1;}
     |   line END        { return 1;}
+    |   lines ANDS END    { return 1;}
     |   line MET_GT WORD END { writecommand($3); return 1;} 
     |   line MET_GT_GT WORD END {writecommand_e($3); return 1;}
     |   error END       {return 1;}
@@ -54,13 +54,18 @@ line :
     |   WORD argz       {add_argz($1); runCommand($1);}
     |   line_MET
     ;
+lines :
+    line    {if(getpid() == mainpid){yyclearin;YYACCEPT;}}
+    ;
 arg :
     %empty
     |   WORD arg        {add_arg($1);}
+    |   ENV_VAR arg     {add_argz(varTable.word[findVar($1)]); }
     ; 
 argz :
     %empty
     |   WORD argz        {add_argz($1);}
+    |   ENV_VAR argz     {add_argz(varTable.word[findVar($1)]); }
     ; 
 argzz :
     %empty
@@ -71,6 +76,8 @@ line_MET :
     |   WORD argz MET_OR WORD argzz   {add_argz($1); add_argzz($4); runCommands($1, $4);}
     |   WORD argz MET_LT WORD   {add_argz($1); runCommandin($1, $4);}
     ;
+ANDS :
+    AND         {fork();}
 %%
 void yyerror(char *s) {
     char iter[256];
@@ -124,43 +131,6 @@ int runCD(char* arg) {
 			sprintf(iter, "Directory not found.\n");
             strcat(buff, iter);
                 return 1;
-		}
-	}
-}
-int runSetAlias(char* name, char* word) {
-	pushAlias (name, word);
-	return 1;
-}
-void displayAlias(){
-	struct aTable* current = aliasHead;
-	while (current != NULL) {
-        char iter[512];
-		sprintf(iter, "%s=%s\n", current->name, current->word);
-        strcat(buff, iter);
-		current = current->next;
-	}
-}
-int removeAlias(char* name) {
-	if (aliasHead != NULL) {
-		if (strcmp(aliasHead->name, name) == 0) {
-			if (aliasHead->next != NULL) {
-				struct aTable* temp = aliasHead;
-				aliasHead = aliasHead->next;
-				free(temp);
-			}
-			else {
-				free(aliasHead);
-				aliasHead = NULL;
-			}
-		}
-		struct aTable* current = aliasHead;
-		while (current != NULL && current->next != NULL) {
-			if (strcmp(current->next->name, name) == 0) {
-				struct aTable* temp = current->next->next;
-				free(current->next);
-				current->next = temp;
-			}
-			current = current->next;
 		}
 	}
 }
@@ -265,8 +235,27 @@ void displayEnv()
 int runCommand(char* command) {
         int pipefd[2];
         pipe(pipefd);
-
         reverse(builtinargz, argzbin);
+        glob_t globbuf;
+        globbuf.gl_offs = 2;
+        int glob_usable = 0;
+        /*
+        if((argzbin == 2))
+        {
+            if( (strchr(builtinargz[1], '*') != NULL || strchr(builtinargz[1], '?') != NULL))
+            {
+                glob(builtinargz[1], GLOB_DOOFFS, NULL, &globbuf);
+                globbuf.gl_pathv[0] = command;
+                glob_usable = 1;
+                int i = 0;
+                while(globbuf.gl_pathv[i])
+                {
+                    printf("%s\n", globbuf.gl_pathv[i]);
+                    i++;
+                }
+            }
+        }
+        */
         char* binaryAddress = (char*) malloc(128*sizeof(char));
         pid_t pid = fork();
         if (pid == -1) {
@@ -288,12 +277,27 @@ int runCommand(char* command) {
                     break;
                 }
             }
-            if (execve(binaryAddress, builtinargz, environ) < 0) {
+            if(glob_usable == 0)
+            {
                 if (execve(binaryAddress, builtinargz, environ) < 0) {
-                    printf("Error running %s.\n Program not found.\n", builtinargz[0]);
+                    if (execve(binaryAddress, builtinargz, environ) < 0) {
+                        printf("Error running %s.\nProgram not found.\n", builtinargz[0]);
+                    }
+                    free(binaryAddress);
+                    exit(0);
                 }
-                exit(0);
             }
+            /*
+            else
+            {
+                if (execve(binaryAddress, &globbuf.gl_pathv[0], environ) < 0) {
+                    if (execve(binaryAddress, &globbuf.gl_pathv[0], environ) < 0) {
+                        printf("Error running %s.\nProgram not found.\n", builtinargz[0]);
+                    }
+                    free(binaryAddress);
+                    exit(0);
+                }
+            }*/
             argzbin = 0;
             return 1;
         }
@@ -391,11 +395,10 @@ void reverse(char** argz, int size) {
 }
 void add_argz(char* arg)
 {
-    builtinargz[argzbin] = (char*) malloc(32*(sizeof(char)));
+    builtinargz[argzbin] = (char*) malloc(128*(sizeof(char)));
     strcpy(builtinargz[argzbin], arg);
     argzbin++;
 }
-
 char** parsePATH() {
     char* newPATH = varTable.word[3];
     int i;
@@ -421,6 +424,15 @@ char** parsePATH() {
         }
     }
     return pathArray;
+}
+int findVar(char* name) {
+    for (int i = 0; varTable.var[i] != NULL; i++) {
+        if (strcmp(varTable.var[i], name) == 0) {
+            return i;
+        }
+    }
+    printf("\n\nVariable %s not found. \n", name);
+    return -1;
 }
 
 void add_argzz(char* arg)

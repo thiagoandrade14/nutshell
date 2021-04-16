@@ -42,7 +42,7 @@ The following built-in commands are supported:
 Unix supported commands in the bin directory should also run (e.g. ls, pwd, etc.).
 
 ## Design ##
-This unix Shell is implemented using Flex and Bison. It scans for input that is fed into flex (lexer), creating tokens according to a set of semantic rules. These tokens are sent the parser, which has a set of syntax rules of what is considered a valid command.
+This unix Shell is implemented using Flex and Bison. It scans for input that is fed into flex (lexer), creating tokens according to a set of semantic rules. These tokens are sent to the parser (Bison), which has a set of syntax rules of what is considered a valid command.
 The parser, after analyzing the command, decides what to do with it. Built-in commands (cd, alias, unalias, setenv, unsetenv, printenv) are implemented within the shell, by making system calls. The remaining commands are called using execve, a system call that looks for the directories located in the PATH environment variable for a executable that matches the command parsed. 
 
 ## Verification ##

@@ -10,6 +10,9 @@
 #include<sys/wait.h>
 #include<string.h>
 #include<stdbool.h>
+#include <pwd.h>
+#include <glob.h>
+#include <signal.h>
 
 //environment table
 //We will use it save importat values such as PWD, HOME, PATH, etc.
@@ -30,6 +33,9 @@ struct aTable {
 //function declarations
 void shell_init();
 void printPrompt();
+int runSetAlias(char* name, char* word);
+void displayAlias();
+int removeAlias(char* name);
 void pushAlias(char* name, char* word);
 char* subAlias(char* name);
 bool isAlias(char* name);
@@ -42,6 +48,7 @@ int varIndex;
 int argbin;
 int argzbin;
 int argzzbin;
+pid_t mainpid;
 char cwd[1024];
 char buff[4096];
 #endif

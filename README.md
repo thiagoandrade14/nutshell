@@ -23,7 +23,7 @@ Hailee Bacon
 File name completion
 
 ## Implemented features ##
-The other features are implemented to some extent.
+All other features in the shell were implemented.
 
 ## Installation ##
 Run "make" command in the main directory.

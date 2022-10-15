@@ -1,7 +1,7 @@
 # nutshell
 Version: 0.8 (April 15th, 2021)
-Thiago de Andrade (UFID 0767-6652)
-Hailee Bacon (UFID xxxx-xxxx)
+Thiago de Andrade
+Hailee Bacon
 
 ## Work division ##
 ### Thiago ### 

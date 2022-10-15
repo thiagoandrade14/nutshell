@@ -1,6 +1,6 @@
 # nutshell
 Version: 0.8 (April 15th, 2021)
-Thiago de Andrade
+Thiago de Andrade, 
 Hailee Bacon
 
 ## Work division ##
